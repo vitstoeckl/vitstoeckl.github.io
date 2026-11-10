@@ -12,7 +12,9 @@ Each step below is meant to be done in **its own session**, in order. Every step
 | Design | **03 Bento** from Figma: [CV Website – Design Directions](https://www.figma.com/design/3REB5g4Hu6i8hLyDVK2Uxg) (Bento frame = node `2:202`) |
 | Look | Light tile grid, rounded tiles (28px), font **Manrope**, background `#EFEEEA`, tiles `#FFFFFF`, ink `#111111`, muted `#6E6E73`, accent emerald `#0E7C66`, accent-soft `#DCEFE9`, dark tile `#141414` |
 | Languages | **EN** (default), **CZ**, **DE**, **ES**, **SK** |
-| Sections | All: Hero, About, Key numbers, Experience, Education, Skills, Languages, Projects, Certificates, Achievements & extracurriculars, Testimonials, Contact |
+| Sections | All: Hero, About, Key numbers, Experience, Education, Skills, Languages, Projects, **Services**, Certificates, Achievements & extracurriculars, Testimonials, Contact |
+| Goal | **Part-time job** in fintech / finance / tech **+ freelance** websites & Claude AI automations |
+| Name | **Vít Stöckl** (LinkedIn uses "Stoeckl"; the site uses Stöckl; file names use ASCII `Vit-Stockl`) |
 | Stack | **Astro** + **Tailwind CSS v4**, self-hosted Manrope (`@fontsource-variable/manrope`) |
 | Content | Plain data files in `src/data/` — editing them updates the site and the PDF |
 | PDF CV | Generated automatically from the same data, one PDF per language |
@@ -69,7 +71,7 @@ CV/
 
 ---
 
-## Step 2 — Content model + placeholder data  ☐
+## Step 2 — Content model + placeholder data  ☑
 
 **Goal:** all site content lives in typed data files, filled with realistic placeholders.
 
@@ -85,6 +87,7 @@ CV/
   - `certificates.ts` – name, issuer, date, verify URL, file, category
   - `achievements.ts` – awards, competitions, clubs, volunteering
   - `testimonials.ts` – quote, name, role
+  - `services.ts` – freelance offers (websites; AI automation with Claude): title, short description, what's included, CTA
 - Text fields that need translating use a `{ en, cs, de, es, sk }` shape.
 - **Use the real content from `content-inbox/linkedin-profile.md` wherever it exists** (profile, summary, experience, education, languages, certificates). Use placeholders only for the gaps (projects, achievements, testimonials, missing dates or links), written in all 5 languages and clearly marked `// PLACEHOLDER`.
 - Create the empty `content-inbox/` folder with a short README telling the user what to drop there.
@@ -117,7 +120,8 @@ CV/
 - **Projects:** featured project as a large tile + grid; filter chips (All / Finance / Data / Web) that work without reloading; each card links to its detail page.
 - **Certificates:** grid of tiles with initial/logo, issuer, date, "Verify ↗" and "View" links.
 - **Achievements & extracurriculars:** tiles.
-- **Testimonials:** quote tiles.
+- **Services ("Work with me"):** two tiles (Websites · AI automation with Claude) with a short pitch, Amorby and this site as proof, and a "Have a project? Let's talk" button to Contact.
+- **Testimonials:** quote tiles (hidden if there are none).
 - **Contact:** large dark tile with email, LinkedIn, GitHub and a contact form (Formspree endpoint from config; if not set yet, the form falls back to opening an email).
 - **Footer:** © year, language links, "Last updated" date.
 - Subtle reveal-on-scroll animation (switched off for users who prefer reduced motion).
