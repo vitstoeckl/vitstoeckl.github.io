@@ -1,0 +1,106 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/manrope';
+
+/* Dark mode is driven by the `.dark` class on <html> (set by the theme script in BaseLayout). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Bento design tokens (Figma "03 Bento", node 2:202)
+   Raw values live in CSS variables so they can switch with the theme.
+   --------------------------------------------------------------------------- */
+:root {
+  --color-bg: #efeeea;          /* page background */
+  --color-tile: #ffffff;        /* default tile */
+  --color-ink: #111111;         /* primary text */
+  --color-muted: #6e6e73;       /* secondary text */
+  --color-line: #e2e1dc;        /* hairlines, chip borders */
+  --color-accent: #0e7c66;      /* emerald */
+  --color-accent-ink: #ffffff;  /* text on accent */
+  --color-accent-soft: #dcefe9; /* soft emerald fill */
+  --color-tile-dark: #141414;   /* dark feature tile */
+  --color-tile-dark-ink: #ffffff;
+  --color-tile-dark-muted: #a1a1a6;
+
+  color-scheme: light;
+}
+
+.dark {
+  --color-bg: #0b0b0c;
+  --color-tile: #18181a;
+  --color-ink: #f2f2f0;
+  --color-muted: #9a9aa0;
+  --color-line: #2a2a2d;
+  --color-accent: #34b79a;
+  --color-accent-ink: #06231c;
+  --color-accent-soft: #12352d;
+  --color-tile-dark: #232326;   /* stays a step apart from regular tiles */
+  --color-tile-dark-ink: #ffffff;
+  --color-tile-dark-muted: #a1a1a6;
+
+  color-scheme: dark;
+}
+
+/* Map the variables into Tailwind utilities: bg-bg, bg-tile, text-ink, text-muted,
+   bg-accent, bg-accent-soft, bg-tile-dark, rounded-tile, font-sans … */
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-tile: var(--color-tile);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-line: var(--color-line);
+  --color-accent: var(--color-accent);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-tile-dark: var(--color-tile-dark);
+  --color-tile-dark-ink: var(--color-tile-dark-ink);
+  --color-tile-dark-muted: var(--color-tile-dark-muted);
+
+  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-tile: 28px;
+  --radius-chip: 999px;
+}
+
+/* ---------------------------------------------------------------------------
+   Base typography
+   --------------------------------------------------------------------------- */
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-bg);
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  h1 {
+    letter-spacing: -0.04em;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-soft);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}

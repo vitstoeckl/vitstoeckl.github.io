@@ -1,0 +1,48 @@
+---
+// TEMPORARY test page (Step 1). Replaced by the language redirect in Step 3.
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Vít Stöckl — setup test" noindex>
+  <main class="mx-auto grid max-w-5xl gap-4 p-4 sm:p-8 md:grid-cols-3">
+    <section class="rounded-tile bg-tile p-8 md:col-span-2">
+      <span
+        class="inline-flex items-center gap-2 rounded-chip bg-accent-soft px-3 py-1 text-sm font-semibold text-accent"
+      >
+        <span class="size-2 rounded-full bg-accent"></span>
+        Open to work
+      </span>
+      <h1 class="mt-6 text-5xl">Finance meets technology.</h1>
+      <p class="mt-4 max-w-prose text-lg text-muted">
+        Test tile for the Bento design tokens — Manrope, rounded 28px tile, ink, muted and emerald accent.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="#" class="rounded-chip bg-ink px-5 py-3 font-semibold text-bg">Download CV</a>
+        <button
+          id="theme-toggle"
+          type="button"
+          class="rounded-chip border border-line px-5 py-3 font-semibold"
+          aria-label="Toggle light/dark mode"
+        >
+          Toggle theme
+        </button>
+      </div>
+    </section>
+
+    <section class="flex flex-col justify-between rounded-tile bg-tile-dark p-8 text-tile-dark-ink">
+      <p class="text-sm text-tile-dark-muted">Dark tile</p>
+      <p class="mt-10 text-6xl font-bold tracking-tighter">12+</p>
+      <p class="text-tile-dark-muted">projects</p>
+    </section>
+  </main>
+
+  <script>
+    const toggle = document.getElementById('theme-toggle');
+    toggle?.addEventListener('click', () => {
+      const dark = document.documentElement.classList.toggle('dark');
+      try {
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+      } catch {}
+    });
+  </script>
+</BaseLayout>
