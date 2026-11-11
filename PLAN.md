@@ -186,7 +186,7 @@ Then:
 
 **Done when:** a visit and a CV download from a phone show up on `/admin` within a minute, and your own visits are excluded.
 
-**Status:** code is built and deployed (tracking, events, `/admin` with encrypted share link, README). Waiting for the Umami account: set the GitHub variables `PUBLIC_UMAMI_WEBSITE_ID` and `PUBLIC_ADMIN_VAULT` (from `npm run admin:vault`), redeploy, then do the phone test above.
+**Status:** tracking is live (Umami Cloud, EU region; GitHub variable `PUBLIC_UMAMI_WEBSITE_ID` set, visits confirmed reaching Umami). Still to do: `/admin` dashboard — turn on the Share URL in Umami, run `npm run admin:vault`, set the GitHub variable `PUBLIC_ADMIN_VAULT`, redeploy; then the phone test above.
 
 ---
 
