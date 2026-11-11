@@ -1,0 +1,208 @@
+---
+/**
+ * /admin — private stats page. Not linked anywhere, noindex, not in the sitemap, no tracking.
+ *
+ * The Umami share link is stored only encrypted (PUBLIC_ADMIN_VAULT, made with
+ * `npm run admin:vault`). Entering the passphrase decrypts it in the browser and shows the
+ * shared dashboard. The unlocked link is kept for this browser tab only (sessionStorage).
+ *
+ * "Don't count my visits" sets Umami's own opt-out flag (localStorage `umami.disabled`)
+ * for this browser on this site.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Tile from '../components/Tile.astro';
+import Icon from '../components/Icon.astro';
+import { adminVault, umami } from '../config';
+import { profile } from '../data/profile';
+import { url } from '../lib/url';
+---
+
+<BaseLayout title={`Stats — ${profile.name}`} lang="en" noindex analytics={false}>
+  <main id="main" class="mx-auto flex max-w-[1360px] flex-col gap-4 px-4 py-6 sm:px-6 lg:px-10">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <a href={url('/en/')} class="text-lg font-bold tracking-tight">{profile.name}</a>
+      <span class="rounded-chip bg-tile px-3.5 py-2 text-sm font-semibold text-muted">Admin · Site stats</span>
+    </div>
+
+    <!-- Locked -->
+    <Tile size="lg" class="mx-auto mt-10 w-full max-w-lg" data-locked>
+      <h1 class="text-3xl">Site stats</h1>
+      {
+        adminVault ? (
+          <form class="mt-6 flex flex-col gap-3" data-unlock data-vault={adminVault}>
+            <label for="passphrase" class="text-sm font-semibold">
+              Passphrase
+            </label>
+            <input
+              id="passphrase"
+              name="passphrase"
+              type="password"
+              required
+              autocomplete="current-password"
+              class="h-12 rounded-[16px] border border-line bg-bg px-4 text-base outline-none focus:border-accent"
+            />
+            <p class="min-h-5 text-sm font-semibold text-red-600 dark:text-red-400" data-error role="alert" />
+            <button
+              type="submit"
+              class="inline-flex h-12 items-center justify-center rounded-chip bg-ink px-6 font-semibold text-bg transition hover:opacity-85 disabled:opacity-60"
+            >
+              <span data-label>Unlock</span>
+            </button>
+          </form>
+        ) : (
+          <div class="mt-4 space-y-3 leading-relaxed text-muted">
+            <p>The stats dashboard isn't connected yet.</p>
+            <ol class="list-decimal space-y-1 pl-5">
+              <li>In Umami: Settings → Websites → your site → Share URL → turn it on and copy the link.</li>
+              <li>
+                Run <code class="rounded bg-bg px-1.5 py-0.5 text-ink">npm run admin:vault</code> and paste the link and a passphrase.
+              </li>
+              <li>Save the printed value as the GitHub variable <code class="rounded bg-bg px-1.5 py-0.5 text-ink">PUBLIC_ADMIN_VAULT</code> and redeploy.</li>
+            </ol>
+          </div>
+        )
+      }
+    </Tile>
+
+    <!-- Unlocked -->
+    <div hidden data-unlocked class="flex flex-col gap-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h1 class="text-3xl sm:text-4xl">Site stats</h1>
+        <div class="flex flex-wrap gap-2">
+          <a
+            data-share-link
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex h-11 items-center gap-2 rounded-chip border border-line bg-tile px-5 text-[0.9375rem] font-semibold hover:bg-bg"
+          >
+            Open in new tab <Icon name="arrow-up-right" size={16} />
+          </a>
+          <a
+            href={new URL(umami.scriptSrc).origin}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex h-11 items-center gap-2 rounded-chip bg-ink px-5 text-[0.9375rem] font-semibold text-bg hover:opacity-85"
+          >
+            Full Umami dashboard <Icon name="arrow-up-right" size={16} />
+          </a>
+          <button type="button" data-lock class="inline-flex h-11 items-center rounded-chip px-4 text-[0.9375rem] font-semibold text-muted hover:text-ink">
+            Lock
+          </button>
+        </div>
+      </div>
+      <Tile size="none" class="h-[80vh] min-h-[600px]">
+        <iframe data-share-frame title="Umami shared dashboard" class="h-full w-full border-0" loading="lazy" referrerpolicy="no-referrer"></iframe>
+      </Tile>
+    </div>
+
+    <!-- Always available: opt out of counting this browser -->
+    <Tile size="sm" class="mx-auto flex w-full max-w-lg items-start justify-between gap-4" data-optout-tile>
+      <div>
+        <p class="font-semibold">Don't count my visits</p>
+        <p class="mt-1 text-sm text-muted" data-optout-status>Visits from this browser are counted.</p>
+      </div>
+      <label class="relative inline-flex shrink-0 cursor-pointer items-center">
+        <input type="checkbox" class="peer sr-only" data-optout aria-label="Don't count my visits" />
+        <span class="h-7 w-12 rounded-full bg-line transition-colors peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent"></span>
+        <span class="absolute top-1 left-1 size-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
+      </label>
+    </Tile>
+  </main>
+</BaseLayout>
+
+<script>
+  /* ---------- Opt out of Umami for this browser ---------- */
+  const optout = document.querySelector<HTMLInputElement>('[data-optout]');
+  const optoutStatus = document.querySelector<HTMLElement>('[data-optout-status]');
+
+  function readOptout(): boolean {
+    try {
+      return localStorage.getItem('umami.disabled') !== null;
+    } catch {
+      return false;
+    }
+  }
+  function renderOptout(on: boolean) {
+    if (optout) optout.checked = on;
+    if (optoutStatus) optoutStatus.textContent = on ? 'Visits from this browser are not counted.' : 'Visits from this browser are counted.';
+  }
+  renderOptout(readOptout());
+  optout?.addEventListener('change', () => {
+    try {
+      if (optout.checked) localStorage.setItem('umami.disabled', '1');
+      else localStorage.removeItem('umami.disabled');
+    } catch {}
+    renderOptout(readOptout());
+  });
+
+  /* ---------- Unlock the dashboard ---------- */
+  const SESSION_KEY = 'admin.share';
+  const locked = document.querySelector<HTMLElement>('[data-locked]');
+  const unlocked = document.querySelector<HTMLElement>('[data-unlocked]');
+  const form = document.querySelector<HTMLFormElement>('form[data-unlock]');
+  const error = document.querySelector<HTMLElement>('[data-error]');
+  const label = document.querySelector<HTMLElement>('[data-label]');
+
+  const fromB64 = (text: string) => Uint8Array.from(atob(text.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+
+  // Must match scripts/admin-vault.mjs.
+  async function decrypt(vault: string, passphrase: string): Promise<string> {
+    const [version, salt, iv, data] = vault.split('.');
+    if (version !== 'v1' || !salt || !iv || !data) throw new Error('bad vault');
+    const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', hash: 'SHA-256', salt: fromB64(salt), iterations: 310_000 },
+      baseKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt'],
+    );
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromB64(iv) }, key, fromB64(data));
+    return new TextDecoder().decode(plain);
+  }
+
+  function show(shareUrl: string | null) {
+    if (locked) locked.hidden = Boolean(shareUrl);
+    if (unlocked) unlocked.hidden = !shareUrl;
+    const frame = document.querySelector<HTMLIFrameElement>('[data-share-frame]');
+    const link = document.querySelector<HTMLAnchorElement>('[data-share-link]');
+    if (frame) frame.src = shareUrl ?? 'about:blank';
+    if (link) link.href = shareUrl ?? '#';
+  }
+
+  try {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) show(saved);
+  } catch {}
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const input = form.querySelector<HTMLInputElement>('input[type="password"]');
+    const button = form.querySelector<HTMLButtonElement>('button');
+    if (!input || !form.dataset.vault) return;
+    if (button) button.disabled = true;
+    if (label) label.textContent = 'Unlocking…';
+    if (error) error.textContent = '';
+    try {
+      const shareUrl = await decrypt(form.dataset.vault, input.value);
+      try {
+        sessionStorage.setItem(SESSION_KEY, shareUrl);
+      } catch {}
+      input.value = '';
+      show(shareUrl);
+    } catch {
+      if (error) error.textContent = 'Wrong passphrase.';
+      input.select();
+    } finally {
+      if (button) button.disabled = false;
+      if (label) label.textContent = 'Unlock';
+    }
+  });
+
+  document.querySelector('[data-lock]')?.addEventListener('click', () => {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {}
+    show(null);
+  });
+</script>

@@ -9,6 +9,7 @@ import '../styles/global.css';
 import { url, localizedPath } from '../lib/url';
 import { defaultLang, isLang, languages, langs } from '../i18n/utils';
 import { profile } from '../data/profile';
+import { umami } from '../config';
 
 interface Props {
   title: string;
@@ -19,6 +20,8 @@ interface Props {
   forceLight?: boolean;
   /** Open Graph type: `profile` for the main CV page, `article` for case studies. */
   ogType?: 'website' | 'profile' | 'article';
+  /** Load Umami on this page (off for /admin and the preview cards). */
+  analytics?: boolean;
 }
 
 const {
@@ -28,7 +31,10 @@ const {
   noindex = false,
   forceLight = false,
   ogType = 'website',
+  analytics = true,
 } = Astro.props;
+
+const trackVisits = analytics && !noindex && import.meta.env.PROD && umami.websiteId !== '';
 
 const site = Astro.site;
 const canonical = new URL(Astro.url.pathname, site);
@@ -80,6 +86,11 @@ const ogImage = new URL(url(`og/${ogLang}.png`), site).href;
     {ogType === 'profile' && <meta property="profile:first_name" content={profile.firstName} />}
     {ogType === 'profile' && <meta property="profile:last_name" content={profile.lastName} />}
     <meta name="twitter:card" content="summary_large_image" />
+    {
+      trackVisits && (
+        <script is:inline defer src={umami.scriptSrc} data-website-id={umami.websiteId} data-domains={site?.hostname} />
+      )
+    }
     <slot name="head" />
 
     <!-- Theme: saved choice, else system preference. Runs before paint → no flash. -->
@@ -99,6 +110,7 @@ const ogImage = new URL(url(`og/${ogLang}.png`), site).href;
     <slot />
     <script>
       import '../lib/reveal';
+      import '../lib/analytics';
     </script>
   </body>
 </html>

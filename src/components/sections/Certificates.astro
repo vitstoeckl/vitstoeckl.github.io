@@ -49,7 +49,7 @@ const newTab = t('a11y.newTab', lang);
                 {(c.verifyUrl || c.file) && (
                   <div class="mt-auto flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-4 text-sm font-semibold">
                     {c.verifyUrl && (
-                      <a href={c.verifyUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-accent hover:underline">
+                      <a href={c.verifyUrl} data-certificate={c.id} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-accent hover:underline">
                         {t('cta.verify', lang)}
                         <Icon name="arrow-up-right" size={15} />
                         <span class="sr-only">

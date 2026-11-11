@@ -186,6 +186,8 @@ Then:
 
 **Done when:** a visit and a CV download from a phone show up on `/admin` within a minute, and your own visits are excluded.
 
+**Status:** code is built and deployed (tracking, events, `/admin` with encrypted share link, README). Waiting for the Umami account: set the GitHub variables `PUBLIC_UMAMI_WEBSITE_ID` and `PUBLIC_ADMIN_VAULT` (from `npm run admin:vault`), redeploy, then do the phone test above.
+
 ---
 
 ## Step 8 — Real content  ☐  *(needs the user's files)*

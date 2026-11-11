@@ -21,8 +21,8 @@ export default defineConfig({
   trailingSlash: 'ignore',
   integrations: [
     sitemap({
-      // Leave out the language redirect at `/` and the internal preview-card pages.
-      filter: (page) => page !== siteRoot && !page.includes('/og-card/'),
+      // Leave out the language redirect at `/`, the internal preview-card pages and /admin.
+      filter: (page) => page !== siteRoot && !page.includes('/og-card/') && !page.includes('/admin'),
       i18n: {
         defaultLocale: 'en',
         locales: { en: 'en', cs: 'cs', de: 'de', es: 'es', sk: 'sk' },
