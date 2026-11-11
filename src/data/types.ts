@@ -96,7 +96,8 @@ export interface SpokenLanguage {
   /** ISO 639-1 code. */
   code: string;
   name: L10n;
-  level: CefrLevel | 'native';
+  /** A CEFR level, a range between two (e.g. `A2–B1`), or `native`. */
+  level: CefrLevel | `${CefrLevel}–${CefrLevel}` | 'native';
   /** Level backed by a certificate, if any. */
   certified?: CefrLevel;
 }
