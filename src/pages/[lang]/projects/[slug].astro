@@ -1,0 +1,180 @@
+---
+/**
+ * Project case study: `/{lang}/projects/{slug}/`, one page per project per language.
+ * Hero (title, summary, links) + key-facts tile (KPI, category, year, tags),
+ * then Problem → Solution → Result, an optional screenshot gallery and a "Next project" tile.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Nav from '../../../components/Nav.astro';
+import Footer from '../../../components/Footer.astro';
+import Tile from '../../../components/Tile.astro';
+import Chip from '../../../components/Chip.astro';
+import Button from '../../../components/Button.astro';
+import Icon from '../../../components/Icon.astro';
+import { langs, pick, t, type Lang } from '../../../i18n/utils';
+import { projects } from '../../../data/projects';
+import { profile } from '../../../data/profile';
+import type { Project } from '../../../data/types';
+import { url } from '../../../lib/url';
+
+export function getStaticPaths() {
+  return langs.flatMap((lang) => projects.map((project) => ({ params: { lang, slug: project.slug }, props: { project } })));
+}
+
+interface Props {
+  project: Project;
+}
+
+const lang = Astro.params.lang as Lang;
+const { project } = Astro.props;
+const title = pick(project.title, lang);
+const newTab = t('a11y.newTab', lang);
+
+// Same order as the Projects section on the home page: featured first.
+const featured = projects.find((p) => p.featured);
+const ordered = featured ? [featured, ...projects.filter((p) => p !== featured)] : projects;
+const index = ordered.findIndex((p) => p.slug === project.slug);
+const next = ordered.length > 1 ? ordered[(index + 1) % ordered.length] : undefined;
+
+const projectsHref = url(`/${lang}/#projects`);
+// Desktop: Problem and Result stacked on the left, the (usually longest) Solution spans two columns.
+const story = [
+  { key: 'project.problem', text: project.problem, variant: 'light', place: 'lg:col-start-1 lg:row-start-1' },
+  { key: 'project.solution', text: project.solution, variant: 'light', place: 'lg:col-span-2 lg:col-start-2 lg:row-span-2 lg:row-start-1' },
+  { key: 'project.result', text: project.result, variant: 'soft', place: 'lg:col-start-1 lg:row-start-2' },
+] as const;
+---
+
+<BaseLayout title={`${title} — ${profile.name}`} description={pick(project.summary, lang)} lang={lang}>
+  <Nav lang={lang} />
+  <main id="main" tabindex="-1" class="mx-auto max-w-[1360px] px-4 pt-2 pb-16 outline-none sm:px-6 lg:px-10 xl:pt-4">
+    <a
+      href={projectsHref}
+      class="mb-4 inline-flex items-center gap-2 rounded-chip px-1 py-1 text-sm font-semibold text-muted transition-colors hover:text-ink"
+    >
+      <Icon name="arrow-right" size={16} class="rotate-180" />
+      {t('project.allProjects', lang)}
+    </a>
+
+    <!-- Hero row -->
+    <div class="grid gap-4 lg:grid-cols-3">
+      <Tile size="lg" class="flex min-h-[340px] flex-col gap-8 lg:col-span-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <Chip variant="neutral">{t(`category.${project.category}`, lang)}</Chip>
+          {project.year && <span class="text-sm text-muted">{project.year}</span>}
+        </div>
+        <div>
+          <h1 class="text-4xl break-words hyphens-auto min-[420px]:text-5xl sm:text-6xl lg:text-7xl">{title}</h1>
+          <p class="mt-5 max-w-[56ch] text-lg leading-relaxed text-muted sm:text-xl">{pick(project.summary, lang)}</p>
+          {
+            project.status && (
+              <p class="mt-5 flex items-center gap-2 text-sm font-semibold text-accent">
+                <span class="size-2 rounded-full bg-accent" aria-hidden="true" />
+                {pick(project.status, lang)}
+              </p>
+            )
+          }
+        </div>
+        {
+          project.links && project.links.length > 0 && (
+            <div class="mt-auto flex flex-wrap gap-3">
+              {project.links.map((link, i) => (
+                <Button href={link.url} external variant={i === 0 ? 'primary' : 'secondary'} wrap>
+                  {t('cta.visit', lang, { site: link.label ?? new URL(link.url).hostname })}
+                  <Icon name="arrow-up-right" size={17} />
+                  <span class="sr-only"> {newTab}</span>
+                </Button>
+              ))}
+            </div>
+          )
+        }
+      </Tile>
+
+      <Tile variant="dark" size="lg" class="flex flex-col gap-8">
+        <h2 class="text-sm font-semibold tracking-normal text-tile-dark-muted">{t('section.keyNumbers', lang)}</h2>
+        {
+          project.kpi && (
+            <div>
+              <p class="text-7xl leading-none font-extrabold tracking-[-0.05em] sm:text-8xl">{project.kpi.value}</p>
+              <p class="mt-2 font-semibold text-tile-dark-muted">{pick(project.kpi.label, lang)}</p>
+            </div>
+          )
+        }
+        {
+          project.tags.length > 0 && (
+            <ul class="mt-auto flex flex-wrap gap-2">
+              {project.tags.map((tag) => (
+                <Chip as="li" variant="onDark" class="max-w-full whitespace-normal!">
+                  {tag}
+                </Chip>
+              ))}
+            </ul>
+          )
+        }
+      </Tile>
+    </div>
+
+    <!-- Problem → Solution → Result -->
+    <div class="mt-4 grid gap-4 lg:grid-cols-3">
+      {
+        story.map((part, i) => (
+          <Tile as="section" variant={part.variant} data-reveal data-reveal-delay={String(i * 100)} class:list={['flex flex-col gap-4', part.place]}>
+            <p class:list={['text-sm font-bold', part.variant === 'soft' ? 'text-accent' : 'text-muted']}>
+              {String(i + 1).padStart(2, '0')}
+            </p>
+            <h2 class="text-2xl sm:text-3xl">{t(part.key, lang)}</h2>
+            <p class:list={['leading-relaxed sm:text-[1.0625rem]', part.key === 'project.solution' && 'lg:text-xl']}>{pick(part.text, lang)}</p>
+          </Tile>
+        ))
+      }
+    </div>
+
+    <!-- Screenshots (only when there are any) -->
+    {
+      project.images && project.images.length > 0 && (
+        <section aria-labelledby="gallery-title" class="mt-16">
+          <h2 id="gallery-title" class="mb-6 text-3xl sm:text-4xl">
+            {t('project.gallery', lang)}
+          </h2>
+          <ul class="grid gap-4 md:grid-cols-2">
+            {project.images.map((image, i) => (
+              <li data-reveal data-reveal-delay={String((i % 2) * 100)}>
+                <Tile as="figure" size="none" class="h-full">
+                  <img src={url(image.src)} alt={pick(image.alt, lang)} loading="lazy" decoding="async" class="h-full w-full object-cover" />
+                </Tile>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <!-- Next project / back -->
+    <div class="mt-16 grid gap-4 md:grid-cols-3">
+      {
+        next && (
+          <Tile as="article" variant="dark" size="lg" class="group flex flex-col gap-3 md:col-span-2" data-reveal>
+            <p class="text-sm font-semibold text-tile-dark-muted">{t('cta.nextProject', lang)}</p>
+            <h2 class="text-3xl sm:text-4xl">
+              <a href={url(`/${lang}/projects/${next.slug}/`)} class="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none">
+                {pick(next.title, lang)}
+              </a>
+            </h2>
+            <p class="max-w-[60ch] text-tile-dark-muted">{pick(next.summary, lang)}</p>
+            <Icon name="arrow-right" size={28} class="mt-4 transition-transform group-hover:translate-x-2" />
+          </Tile>
+        )
+      }
+      <Tile as="article" class:list={['group flex flex-col justify-between gap-6', !next && 'md:col-span-3']} data-reveal data-reveal-delay="100">
+        <p class="text-sm font-semibold text-muted">{profile.name}</p>
+        <p class="text-2xl font-bold tracking-tight">
+          <a href={url(`/${lang}/`)} class="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none">
+            {t('cta.backHome', lang)}
+          </a>
+        </p>
+        <Icon name="arrow-right" size={24} class="rotate-180 transition-transform group-hover:-translate-x-2" />
+      </Tile>
+    </div>
+  </main>
+  <Footer lang={lang} />
+</BaseLayout>

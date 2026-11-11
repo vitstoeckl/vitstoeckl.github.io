@@ -1,0 +1,477 @@
+---
+/**
+ * Print CV: `/{lang}/cv/`. A4 layout built from the same data as the site, no nav.
+ * On screen it shows a paper sheet with a small toolbar; when printed (or saved as PDF by
+ * `scripts/generate-pdf.mjs` in Step 6) only the sheet is output. Always light.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+import { formatDateRange, formatYearMonth, langs, pick, t, type Lang } from '../../i18n/utils';
+import { profile } from '../../data/profile';
+import { experience } from '../../data/experience';
+import { education } from '../../data/education';
+import { skillGroups } from '../../data/skills';
+import { spokenLanguages } from '../../data/languages';
+import { certificates } from '../../data/certificates';
+import { projects } from '../../data/projects';
+import { url } from '../../lib/url';
+
+export function getStaticPaths() {
+  return langs.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+
+const siteUrl = new URL(url(`/${lang}/`), Astro.site);
+const display = (href: string) => href.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+
+const contacts: { icon: IconName; text: string; href?: string }[] = [
+  { icon: 'map-pin', text: pick(profile.location, lang) },
+  { icon: 'mail', text: profile.email, href: `mailto:${profile.email}` },
+  { icon: 'linkedin', text: display(profile.socials.linkedin), href: profile.socials.linkedin },
+  ...(profile.socials.github ? [{ icon: 'github' as const, text: display(profile.socials.github), href: profile.socials.github }] : []),
+  { icon: 'globe', text: display(siteUrl.href), href: siteUrl.href },
+];
+
+const featured = projects.find((p) => p.featured);
+const selectedProjects = (featured ? [featured, ...projects.filter((p) => p !== featured)] : projects).slice(0, 3);
+
+function levelLabel(level: (typeof spokenLanguages)[number]['level']): string {
+  return level === 'native' ? t('level.native', lang) : level;
+}
+---
+
+<BaseLayout title={t('cv.metaTitle', lang, { name: profile.name })} description={pick(profile.status.lookingFor, lang)} lang={lang} forceLight>
+  <div class="cv-toolbar mx-auto flex max-w-[210mm] flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-0">
+    <a href={url(`/${lang}/`)} class="inline-flex items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-ink">
+      <Icon name="arrow-right" size={16} class="rotate-180" />
+      {t('cta.backHome', lang)}
+    </a>
+    <button
+      type="button"
+      data-print
+      class="inline-flex h-11 items-center gap-2 rounded-chip bg-ink px-5 text-[0.9375rem] font-semibold text-bg transition hover:opacity-85"
+    >
+      <Icon name="download" size={18} />
+      {t('cv.print', lang)}
+    </button>
+  </div>
+
+  <main id="main" class="cv-sheet">
+    <header class="cv-header">
+      <div>
+        <h1>{profile.name}</h1>
+        <p class="cv-title">{pick(profile.title, lang)}</p>
+      </div>
+      <ul class="cv-contacts">
+        {
+          contacts.map((c) => (
+            <li>
+              <Icon name={c.icon} size={12} />
+              {c.href ? <a href={c.href}>{c.text}</a> : <span>{c.text}</span>}
+            </li>
+          ))
+        }
+      </ul>
+    </header>
+
+    <div class="cv-body">
+      <div class="cv-main">
+        <section>
+          <h2>{t('cv.profile', lang)}</h2>
+          {profile.summary.map((paragraph) => <p class="cv-text">{pick(paragraph, lang)}</p>)}
+          <p class="cv-text cv-strong">{pick(profile.status.lookingFor, lang)}</p>
+        </section>
+
+        {
+          experience.length > 0 && (
+            <section>
+              <h2>{t('section.experience', lang)}</h2>
+              {experience.map((job) => (
+                <article class="cv-item">
+                  <div class="cv-item-head">
+                    <h3>
+                      {pick(job.role, lang)} · <span>{job.company}</span>
+                    </h3>
+                    <p class="cv-meta">{formatDateRange(job.start, job.end, lang)}</p>
+                  </div>
+                  <p class="cv-meta">
+                    {pick(job.location, lang)}
+                    {job.employmentType && ` · ${pick(job.employmentType, lang)}`}
+                  </p>
+                  <ul class="cv-bullets">
+                    {job.bullets.map((bullet) => (
+                      <li>{pick(bullet, lang)}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </section>
+          )
+        }
+
+        {
+          education.length > 0 && (
+            <section>
+              <h2>{t('section.education', lang)}</h2>
+              {education.map((item) => (
+                <article class="cv-item">
+                  <div class="cv-item-head">
+                    <h3>
+                      {pick(item.field, lang)} · <span>{pick(item.degree, lang)}</span>
+                    </h3>
+                    <p class="cv-meta">
+                      {formatDateRange(item.start, item.end, lang)}
+                      {item.endExpected && ` (${t('date.expected', lang)})`}
+                    </p>
+                  </div>
+                  <p class="cv-meta">
+                    {item.school} · {pick(item.location, lang)}
+                  </p>
+                  {item.courses && item.courses.length > 0 && (
+                    <p class="cv-text">
+                      <strong>{t('education.courses', lang)}:</strong> {item.courses.map((c) => pick(c, lang)).join(', ')}
+                    </p>
+                  )}
+                  {item.thesis && (
+                    <p class="cv-text">
+                      <strong>{t('education.thesis', lang)}:</strong> {pick(item.thesis, lang)}
+                    </p>
+                  )}
+                  {item.gpa && (
+                    <p class="cv-text">
+                      <strong>{t('education.gpa', lang)}:</strong> {item.gpa}
+                    </p>
+                  )}
+                </article>
+              ))}
+            </section>
+          )
+        }
+
+        {
+          selectedProjects.length > 0 && (
+            <section>
+              <h2>{t('cv.selectedProjects', lang)}</h2>
+              {selectedProjects.map((p) => (
+                <article class="cv-item">
+                  <div class="cv-item-head">
+                    <h3>{pick(p.title, lang)}</h3>
+                    <p class="cv-meta">
+                      {[p.year, p.links?.[0] ? (p.links[0].label ?? display(p.links[0].url)) : undefined].filter(Boolean).join(' · ')}
+                    </p>
+                  </div>
+                  <p class="cv-text">{pick(p.summary, lang)}</p>
+                </article>
+              ))}
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="cv-side">
+        {
+          skillGroups.length > 0 && (
+            <section>
+              <h2>{t('section.skills', lang)}</h2>
+              {skillGroups.map((group) => (
+                <div class="cv-group">
+                  <h3>{pick(group.title, lang)}</h3>
+                  <ul class="cv-tags">
+                    {group.skills.map((skill) => (
+                      <li class:list={[skill.highlight && 'is-highlight']}>{pick(skill.name, lang)}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </section>
+          )
+        }
+
+        {
+          spokenLanguages.length > 0 && (
+            <section>
+              <h2>{t('section.languages', lang)}</h2>
+              <ul class="cv-list">
+                {spokenLanguages.map((l) => (
+                  <li>
+                    <span class="cv-strong">{pick(l.name, lang)}</span>
+                    <span class="cv-meta">
+                      {levelLabel(l.level)}
+                      {l.certified && ` · ${t('level.certified', lang, { level: l.certified })}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+
+        {
+          certificates.length > 0 && (
+            <section>
+              <h2>{t('section.certificates', lang)}</h2>
+              <ul class="cv-list">
+                {certificates.map((c) => (
+                  <li>
+                    <span class="cv-strong">{pick(c.name, lang)}</span>
+                    {(c.issuer || c.date) && (
+                      <span class="cv-meta">{[c.issuer, c.date && formatYearMonth(c.date, lang)].filter(Boolean).join(' · ')}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+      </aside>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  document.querySelector('[data-print]')?.addEventListener('click', () => window.print());
+</script>
+
+<style>
+  /* Paper sheet: A4 on screen, the printable area in print. Sizes in pt/mm to match paper. */
+  .cv-sheet {
+    box-sizing: border-box;
+    width: 210mm;
+    max-width: calc(100% - 2rem);
+    min-height: 297mm;
+    margin: 0 auto 3rem;
+    padding: 14mm 15mm;
+    background: #fff;
+    color: #111;
+    border-radius: 6px;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.06),
+      0 12px 40px rgb(0 0 0 / 0.08);
+    font-size: 9.5pt;
+    line-height: 1.45;
+  }
+
+  .cv-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 4mm 10mm;
+    padding-bottom: 6mm;
+    border-bottom: 1.5pt solid var(--color-accent);
+  }
+
+  h1 {
+    font-size: 26pt;
+    line-height: 1;
+  }
+
+  .cv-title {
+    margin-top: 2.5mm;
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
+  .cv-contacts {
+    display: grid;
+    gap: 1.2mm;
+    font-size: 8.5pt;
+    color: #3a3a3c;
+  }
+
+  .cv-contacts li {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+  }
+
+  .cv-contacts :global(svg) {
+    color: var(--color-accent);
+  }
+
+  .cv-contacts a:hover {
+    text-decoration: underline;
+  }
+
+  .cv-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 58mm;
+    gap: 9mm;
+    margin-top: 6mm;
+  }
+
+  section + section {
+    margin-top: 6mm;
+  }
+
+  h2 {
+    margin-bottom: 3mm;
+    font-size: 8pt;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  h3 {
+    font-size: 10pt;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    text-wrap: pretty;
+  }
+
+  h3 span {
+    font-weight: 600;
+    color: #3a3a3c;
+  }
+
+  .cv-text + .cv-text {
+    margin-top: 2mm;
+  }
+
+  .cv-strong {
+    font-weight: 600;
+  }
+
+  .cv-meta {
+    font-size: 8.5pt;
+    color: var(--color-muted);
+  }
+
+  .cv-item {
+    break-inside: avoid;
+  }
+
+  .cv-item + .cv-item {
+    margin-top: 4mm;
+  }
+
+  .cv-item-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0 4mm;
+  }
+
+  .cv-item-head .cv-meta {
+    white-space: nowrap;
+  }
+
+  .cv-item > .cv-text,
+  .cv-item > .cv-bullets {
+    margin-top: 1.5mm;
+  }
+
+  .cv-bullets {
+    display: grid;
+    gap: 1mm;
+    padding-left: 4mm;
+    list-style: disc;
+  }
+
+  .cv-bullets li::marker {
+    color: var(--color-accent);
+  }
+
+  .cv-side {
+    padding-left: 6mm;
+    border-left: 0.75pt solid var(--color-line);
+  }
+
+  .cv-group + .cv-group {
+    margin-top: 3.5mm;
+  }
+
+  .cv-group h3 {
+    margin-bottom: 1.5mm;
+    font-size: 9pt;
+  }
+
+  .cv-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2mm;
+  }
+
+  .cv-tags li {
+    padding: 0.6mm 2.2mm;
+    border-radius: 999px;
+    background: var(--color-bg);
+    font-size: 8pt;
+    line-height: 1.35;
+  }
+
+  .cv-tags li.is-highlight {
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  .cv-list {
+    display: grid;
+    gap: 2mm;
+  }
+
+  .cv-list li {
+    display: flex;
+    flex-direction: column;
+    break-inside: avoid;
+  }
+
+  /* Phones: stack the columns so the sheet stays readable on screen. */
+  @media screen and (max-width: 640px) {
+    .cv-sheet {
+      min-height: 0;
+      padding: 8mm 6mm;
+    }
+
+    .cv-body {
+      grid-template-columns: 1fr;
+    }
+
+    .cv-side {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+
+  @media print {
+    @page {
+      size: A4;
+      margin: 12mm 14mm;
+    }
+
+    :global(html),
+    :global(body) {
+      background: #fff !important;
+    }
+
+    .cv-toolbar {
+      display: none;
+    }
+
+    .cv-sheet {
+      width: auto;
+      max-width: none;
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+</style>

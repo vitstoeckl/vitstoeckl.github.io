@@ -130,7 +130,7 @@ CV/
 
 ---
 
-## Step 5 — Project detail pages + print CV page  ☐
+## Step 5 — Project detail pages + print CV page  ☑
 
 **Goal:** deeper pages for projects, and a clean print layout for the PDF.
 

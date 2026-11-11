@@ -7,6 +7,8 @@ interface Props {
   description?: string;
   lang?: string;
   noindex?: boolean;
+  /** Always light, ignoring the saved theme (the print CV page). */
+  forceLight?: boolean;
 }
 
 const {
@@ -14,13 +16,14 @@ const {
   description = 'Vít Stöckl — finance & technology student. CV and portfolio.',
   lang = 'en',
   noindex = false,
+  forceLight = false,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} data-force-light={forceLight ? '' : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -46,6 +49,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         var stored = null;
         try { stored = localStorage.getItem('theme'); } catch (e) {}
         var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (document.documentElement.hasAttribute('data-force-light')) dark = false;
         document.documentElement.classList.toggle('dark', dark);
         // Lets CSS hide [data-reveal] blocks until they scroll in; without JS they stay visible.
         document.documentElement.classList.add('js');
