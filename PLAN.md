@@ -186,7 +186,7 @@ Then:
 
 **Done when:** a visit and a CV download from a phone show up on `/admin` within a minute, and your own visits are excluded.
 
-**Status:** tracking is live (Umami Cloud, EU region; GitHub variable `PUBLIC_UMAMI_WEBSITE_ID` set, visits confirmed reaching Umami). Still to do: `/admin` dashboard — turn on the Share URL in Umami, run `npm run admin:vault`, set the GitHub variable `PUBLIC_ADMIN_VAULT`, redeploy; then the phone test above.
+**Status:** tracking is live (Umami Cloud, EU region; GitHub variable `PUBLIC_UMAMI_WEBSITE_ID` set, visits confirmed reaching Umami). `/admin` is connected (GitHub variable `PUBLIC_ADMIN_VAULT` set). Still to do: Vít unlocks `/admin` with his passphrase, switches on "Don't count my visits" on each of his devices, then does the phone test above.
 
 ---
 
