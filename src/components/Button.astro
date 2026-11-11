@@ -1,0 +1,50 @@
+---
+/**
+ * Button or link styled as a pill.
+ *  - primary: solid ink · secondary: tile with hairline border · ghost: text only
+ *  - icon: round icon-only button — pass `label` (becomes aria-label)
+ * With `href` it renders `<a>`, otherwise `<button type="button">`.
+ */
+interface Props {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'icon';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+  label?: string;
+  external?: boolean;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { variant = 'primary', size = 'md', href, label, external = false, class: className, ...rest } = Astro.props;
+
+const isIcon = variant === 'icon';
+const variants = {
+  primary: 'bg-ink text-bg hover:opacity-85',
+  secondary: 'border border-line bg-tile text-ink hover:bg-bg',
+  ghost: 'text-ink hover:bg-bg',
+  icon: 'border border-line bg-tile text-ink hover:bg-bg',
+};
+const sizes = isIcon
+  ? { sm: 'size-9', md: 'size-11', lg: 'size-15' }
+  : { sm: 'h-9 px-4 text-sm', md: 'h-11 px-5 text-[0.9375rem]', lg: 'h-13 px-6 text-base' };
+
+const classes = [
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-chip font-semibold whitespace-nowrap transition',
+  variants[variant],
+  sizes[size],
+  className,
+];
+const externalProps = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+{
+  href ? (
+    <a href={href} class:list={classes} aria-label={label} {...externalProps} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type="button" class:list={classes} aria-label={label} {...rest}>
+      <slot />
+    </button>
+  )
+}

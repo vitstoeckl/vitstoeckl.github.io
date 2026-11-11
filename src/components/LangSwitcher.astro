@@ -1,0 +1,121 @@
+---
+/**
+ * Language switcher. Every link points to the same page in the other language; on click
+ * the script adds the section the visitor is currently reading (`#experience` …),
+ * so switching language keeps their place. The choice is remembered for the `/` redirect.
+ *  - dropdown: "EN ▾" pill with a menu (desktop nav)
+ *  - list: a row of chips (mobile menu)
+ */
+import Icon from './Icon.astro';
+import Chip from './Chip.astro';
+import { languages, langs, t, type Lang } from '../i18n/utils';
+import { localizedPath } from '../lib/url';
+
+interface Props {
+  lang: Lang;
+  variant?: 'dropdown' | 'list';
+  class?: string;
+}
+
+const { lang, variant = 'dropdown', class: className } = Astro.props;
+
+const items = langs.map((code) => ({
+  code,
+  href: localizedPath(Astro.url.pathname, code),
+  short: languages[code].short,
+  label: languages[code].label,
+  current: code === lang,
+}));
+---
+
+{
+  variant === 'dropdown' ? (
+    <details class:list={['lang-switcher group relative', className]} data-lang-dropdown>
+      <summary
+        class="inline-flex h-11 cursor-pointer list-none items-center gap-1 rounded-chip border border-line bg-tile px-4 text-sm font-semibold transition select-none hover:bg-bg [&::-webkit-details-marker]:hidden"
+        aria-label={`${t('lang.label', lang)}: ${languages[lang].label}`}
+      >
+        {languages[lang].short}
+        <Icon name="chevron-down" size={14} class="transition-transform group-open:rotate-180" />
+      </summary>
+      <ul class="absolute right-0 z-50 mt-2 min-w-44 rounded-[20px] border border-line bg-tile p-1.5 shadow-lg shadow-black/5">
+        {items.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              hreflang={item.code}
+              lang={item.code}
+              data-lang-link={item.code}
+              aria-current={item.current ? 'page' : undefined}
+              class:list={[
+                'flex items-center justify-between gap-4 rounded-[14px] px-3 py-2 text-sm font-medium transition hover:bg-bg',
+                item.current && 'bg-bg',
+              ]}
+            >
+              <span>{item.label}</span>
+              <span class="text-xs font-semibold text-muted">{item.short}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </details>
+  ) : (
+    <ul class:list={['flex flex-wrap gap-2', className]} aria-label={t('lang.label', lang)}>
+      {items.map((item) => (
+        <li>
+          <Chip
+            href={item.href}
+            active={item.current}
+            variant="outline"
+            hreflang={item.code}
+            lang={item.code}
+            title={item.label}
+            data-lang-link={item.code}
+          >
+            {item.short}
+          </Chip>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<script>
+  /** The section currently at the top of the screen, if any. */
+  function currentSectionId(): string | null {
+    let current: string | null = null;
+    document.querySelectorAll<HTMLElement>('main section[id]').forEach((section) => {
+      if (section.getBoundingClientRect().top <= window.innerHeight * 0.35) current = section.id;
+    });
+    return current;
+  }
+
+  document.querySelectorAll<HTMLAnchorElement>('a[data-lang-link]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      try {
+        localStorage.setItem('lang', link.dataset.langLink ?? '');
+      } catch {}
+      if (link.getAttribute('aria-current') === 'page' || link.getAttribute('aria-current') === 'true') {
+        event.preventDefault();
+        link.closest('details')?.removeAttribute('open');
+        return;
+      }
+      const section = currentSectionId() ?? location.hash.slice(1);
+      if (section) link.href = `${link.href.split('#')[0]}#${section}`;
+    });
+  });
+
+  // Close the dropdown on outside click or Escape.
+  document.addEventListener('click', (event) => {
+    document.querySelectorAll<HTMLDetailsElement>('details[data-lang-dropdown][open]').forEach((details) => {
+      if (!details.contains(event.target as Node)) details.open = false;
+    });
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    document.querySelectorAll<HTMLDetailsElement>('details[data-lang-dropdown][open]').forEach((details) => {
+      details.open = false;
+      details.querySelector('summary')?.focus();
+    });
+  });
+</script>

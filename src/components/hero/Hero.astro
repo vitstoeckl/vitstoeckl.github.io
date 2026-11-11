@@ -1,0 +1,108 @@
+---
+/**
+ * Hero row (Figma Bento): wide intro tile + photo tile.
+ * Intro: status badge, headline, short lead (`profile.status.lookingFor`), CTAs, social links.
+ * Photo: `profile.photo` when set, otherwise a soft gradient with initials and a name card.
+ */
+import Tile from '../Tile.astro';
+import Badge from '../Badge.astro';
+import Button from '../Button.astro';
+import Icon from '../Icon.astro';
+import { pick, t, type Lang } from '../../i18n/utils';
+import { profile } from '../../data/profile';
+import { url } from '../../lib/url';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const newTab = t('a11y.newTab', lang);
+
+const socials = [
+  { name: 'linkedin', label: 'LinkedIn', href: profile.socials.linkedin, external: true },
+  { name: 'github', label: 'GitHub', href: profile.socials.github, external: true },
+  { name: 'mail', label: `${t('contact.email', lang)}: ${profile.email}`, href: profile.email && `mailto:${profile.email}`, external: false },
+] as const;
+const visibleSocials = socials.filter((s) => s.href);
+---
+
+<section aria-labelledby="hero-title" class="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
+  <Tile size="lg" class="flex flex-col justify-between gap-10 lg:min-h-[440px]">
+    <div>
+      {profile.status.available && <Badge pulse>{pick(profile.status.label, lang)}</Badge>}
+      <h1
+        id="hero-title"
+        class="mt-6 max-w-[14ch] text-[clamp(2.5rem,1.4rem+3.6vw,4rem)] leading-[1.02] font-extrabold sm:mt-7"
+      >
+        {pick(profile.headline, lang)}
+      </h1>
+    </div>
+
+    <div class="flex flex-col gap-6">
+      <p class="max-w-[46ch] text-base leading-relaxed text-muted sm:text-[1.0625rem]">
+        {pick(profile.status.lookingFor, lang)}
+      </p>
+      <div class="flex flex-wrap items-center gap-3">
+        <Button href="#contact" size="lg">
+          {t('cta.contact', lang)}
+          <Icon name="arrow-right" size={18} />
+        </Button>
+        <Button href="#projects" variant="secondary" size="lg">{t('cta.viewProjects', lang)}</Button>
+        {
+          visibleSocials.length > 0 && (
+            <ul class="flex items-center gap-2 sm:ml-auto">
+              {visibleSocials.map((s) => (
+                <li>
+                  <Button
+                    href={s.href}
+                    variant="icon"
+                    size="lg"
+                    external={s.external}
+                    label={s.external ? `${s.label} ${newTab}` : s.label}
+                    title={s.label}
+                  >
+                    <Icon name={s.name} size={20} />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+    </div>
+  </Tile>
+
+  <Tile size="none" class="photo-tile min-h-[360px] sm:min-h-[420px] lg:min-h-[440px]">
+    {
+      profile.photo ? (
+        <img
+          src={url(profile.photo)}
+          alt={profile.name}
+          class="absolute inset-0 size-full object-cover"
+          width="452"
+          height="440"
+          fetchpriority="high"
+        />
+      ) : (
+        <div aria-hidden="true" class="absolute inset-0 flex items-center justify-center pb-20">
+          <span class="text-[clamp(7rem,14vw,10rem)] leading-none font-extrabold tracking-[-0.06em] text-ink/[0.08] select-none">
+            {profile.initials}
+          </span>
+        </div>
+      )
+    }
+    <div class="absolute inset-x-4 bottom-4 rounded-[20px] bg-tile/85 px-5 py-4 backdrop-blur-md sm:inset-x-5 sm:bottom-5">
+      <p class="text-xl font-bold tracking-tight">{profile.name}</p>
+      <p class="mt-0.5 text-sm text-muted">{pick(profile.title, lang)} · {pick(profile.location, lang)}</p>
+    </div>
+  </Tile>
+</section>
+
+<style>
+  .photo-tile {
+    background:
+      radial-gradient(120% 90% at 85% 10%, var(--color-photo-glow) 0%, transparent 60%),
+      linear-gradient(160deg, var(--color-photo-from) 0%, var(--color-photo-to) 100%);
+  }
+</style>

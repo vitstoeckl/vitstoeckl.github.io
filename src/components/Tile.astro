@@ -1,0 +1,35 @@
+---
+/**
+ * Bento tile: rounded 28px card. Grid placement (col-span, min-height) comes from `class`.
+ *  - variant: light (white), dark (near-black feature tile), accent (emerald), soft (emerald tint)
+ *  - size: inner padding — sm 24px, md 32px (default), lg 40px; all 24px on phones
+ */
+import type { HTMLTag } from 'astro/types';
+
+interface Props {
+  as?: HTMLTag;
+  variant?: 'light' | 'dark' | 'accent' | 'soft';
+  size?: 'none' | 'sm' | 'md' | 'lg';
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { as: Tag = 'div', variant = 'light', size = 'md', class: className, ...rest } = Astro.props;
+
+const variants = {
+  light: 'bg-tile text-ink',
+  dark: 'bg-tile-dark text-tile-dark-ink',
+  accent: 'bg-accent text-accent-ink',
+  soft: 'bg-accent-soft text-ink',
+};
+const sizes = {
+  none: '',
+  sm: 'p-5 sm:p-6',
+  md: 'p-6 sm:p-8',
+  lg: 'p-6 sm:p-10',
+};
+---
+
+<Tag class:list={['relative overflow-hidden rounded-tile', variants[variant], sizes[size], className]} {...rest}>
+  <slot />
+</Tag>

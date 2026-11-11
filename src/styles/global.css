@@ -20,6 +20,9 @@
   --color-tile-dark: #141414;   /* dark feature tile */
   --color-tile-dark-ink: #ffffff;
   --color-tile-dark-muted: #a1a1a6;
+  --color-photo-from: #e4ded2;  /* hero photo placeholder (Figma photo tile #D9D3C7) */
+  --color-photo-to: #d3cbbc;
+  --color-photo-glow: #dcefe9;
 
   color-scheme: light;
 }
@@ -36,6 +39,9 @@
   --color-tile-dark: #232326;   /* stays a step apart from regular tiles */
   --color-tile-dark-ink: #ffffff;
   --color-tile-dark-muted: #a1a1a6;
+  --color-photo-from: #262420;
+  --color-photo-to: #1b1a17;
+  --color-photo-glow: #12352d;
 
   color-scheme: dark;
 }
@@ -72,6 +78,17 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Keep section titles clear of the sticky nav when jumping to #anchors. */
+  [id] {
+    scroll-margin-top: 6.5rem;
   }
 
   body {

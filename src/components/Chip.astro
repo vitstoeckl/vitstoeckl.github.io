@@ -1,0 +1,40 @@
+---
+/**
+ * Small pill for skills, languages, tags and filters.
+ *  - neutral: grey fill · accent: emerald tint (highlighted skills) · outline: hairline border
+ *  - onDark: for use inside a dark tile · active: solid ink (selected filter / current language)
+ * Renders `<a>` when `href` is given, otherwise the tag from `as`.
+ */
+interface Props {
+  variant?: 'neutral' | 'accent' | 'outline' | 'onDark';
+  active?: boolean;
+  href?: string;
+  as?: 'span' | 'button' | 'li';
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { variant = 'neutral', active = false, href, as = 'span', class: className, ...rest } = Astro.props;
+
+const variants = {
+  neutral: 'bg-bg text-ink',
+  accent: 'bg-accent-soft text-accent',
+  outline: 'border border-line text-ink',
+  onDark: 'bg-white/10 text-tile-dark-ink',
+};
+const interactive = Boolean(href) || as === 'button';
+const Tag = href ? 'a' : as;
+---
+
+<Tag
+  class:list={[
+    'inline-flex items-center gap-1.5 rounded-chip px-3.5 py-2 text-sm leading-tight font-medium whitespace-nowrap transition-colors',
+    active ? 'bg-ink text-bg' : variants[variant],
+    interactive && !active && 'hover:bg-line',
+    className,
+  ]}
+  href={href}
+  type={as === 'button' && !href ? 'button' : undefined}
+  aria-current={href && active ? 'true' : undefined}
+  {...rest}><slot /></Tag
+>

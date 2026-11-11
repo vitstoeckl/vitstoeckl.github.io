@@ -1,0 +1,50 @@
+---
+/**
+ * Light/dark switch. The initial theme is set before paint by the inline script in BaseLayout;
+ * this button flips the `.dark` class on <html> and remembers the choice in localStorage.
+ */
+import Icon from './Icon.astro';
+import { t, type Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+  class?: string;
+}
+
+const { lang, class: className } = Astro.props;
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  aria-label={t('theme.toggle', lang)}
+  title={t('theme.toggle', lang)}
+  class:list={[
+    'inline-flex size-11 shrink-0 items-center justify-center rounded-chip border border-line bg-tile text-ink transition hover:bg-bg',
+    className,
+  ]}
+>
+  <Icon name="moon" class="dark:hidden" />
+  <Icon name="sun" class="hidden dark:block" />
+</button>
+
+<script>
+  function syncPressed() {
+    const dark = document.documentElement.classList.contains('dark');
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(dark));
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const dark = document.documentElement.classList.toggle('dark');
+      try {
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+      } catch {}
+      syncPressed();
+    });
+  });
+
+  syncPressed();
+</script>

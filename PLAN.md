@@ -96,7 +96,7 @@ CV/
 
 ---
 
-## Step 3 — Core components + Hero  ☐
+## Step 3 — Core components + Hero  ☑
 
 **Goal:** the top of the page looks like the Figma Bento design.
 

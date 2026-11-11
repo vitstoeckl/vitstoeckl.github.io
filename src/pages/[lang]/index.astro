@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import Hero from '../../components/hero/Hero.astro';
+import { langs, t, type Lang } from '../../i18n/utils';
+import { profile } from '../../data/profile';
+
+export function getStaticPaths() {
+  return langs.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+---
+
+<BaseLayout
+  title={t('meta.title', lang, { name: profile.name })}
+  description={t('meta.description', lang, { name: profile.name })}
+  lang={lang}
+>
+  <Nav lang={lang} />
+  <main id="main" tabindex="-1" class="mx-auto max-w-[1360px] px-4 pt-2 pb-16 outline-none sm:px-6 lg:px-10 xl:pt-4">
+    <Hero lang={lang} />
+    <!-- Step 4 adds the remaining sections here (ids from src/lib/sections.ts). -->
+  </main>
+</BaseLayout>

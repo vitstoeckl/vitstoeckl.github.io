@@ -1,0 +1,170 @@
+---
+/**
+ * Top navigation (Figma Bento): name left, pill menu centre, language + theme + "Download CV" right.
+ * Below `xl` it collapses to name + theme toggle + menu button with a drop-down panel.
+ * The script highlights the section currently on screen (aria-current="location").
+ */
+import Icon from './Icon.astro';
+import Button from './Button.astro';
+import LangSwitcher from './LangSwitcher.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { t, type Lang } from '../i18n/utils';
+import { profile, cvFileName } from '../data/profile';
+import { navSections } from '../lib/sections';
+import { url } from '../lib/url';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const home = url(`/${lang}/`);
+const cvHref = url(`cv/${cvFileName(lang)}`);
+// Section links are plain `#id` on the home page and `/{lang}/#id` everywhere else.
+const onHome = Astro.url.pathname.replace(/\/+$/, '') === home.replace(/\/+$/, '');
+const sectionHref = (id: string) => (onHome ? `#${id}` : `${home}#${id}`);
+---
+
+<header class="sticky top-0 z-40 bg-bg/85 backdrop-blur-md supports-[backdrop-filter]:bg-bg/70">
+  <a
+    href="#main"
+    class="sr-only rounded-chip bg-ink px-4 py-2 text-sm font-semibold text-bg focus:not-sr-only focus:absolute focus:top-3 focus:left-4"
+  >
+    {t('nav.skip', lang)}
+  </a>
+
+  <div class="mx-auto flex h-18 max-w-[1360px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10 xl:grid xl:h-[105px] xl:grid-cols-[1fr_auto_1fr]">
+    <a href={home} class="text-lg font-bold tracking-tight whitespace-nowrap sm:text-xl">{profile.name}</a>
+
+    <!-- Desktop pill menu -->
+    <nav aria-label={t('nav.menu', lang)} class="hidden xl:block">
+      <ul class="flex items-center gap-0.5 rounded-chip bg-tile p-1.5">
+        {
+          navSections.map((section) => (
+            <li>
+              <a
+                href={sectionHref(section.id)}
+                data-nav-link={section.id}
+                class="block rounded-chip px-4 py-2 text-[0.9375rem] font-medium whitespace-nowrap transition-colors hover:bg-bg aria-[current=location]:bg-ink aria-[current=location]:text-bg"
+              >
+                {t(section.label, lang)}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="flex items-center justify-end gap-2.5">
+      <LangSwitcher lang={lang} class="hidden xl:block" />
+      <ThemeToggle lang={lang} />
+      <Button href={cvHref} download class="max-xl:hidden">{t('cta.downloadCv', lang)}</Button>
+
+      <button
+        type="button"
+        data-menu-toggle
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        class="inline-flex h-11 items-center gap-2 rounded-chip bg-ink px-4 text-sm font-semibold text-bg xl:hidden"
+      >
+        <span data-menu-icon="open" class="contents"><Icon name="menu" size={18} /></span>
+        <span data-menu-icon="close" class="hidden"><Icon name="close" size={18} /></span>
+        <span data-menu-label data-open={t('nav.menu', lang)} data-close={t('nav.close', lang)}>{t('nav.menu', lang)}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Compact menu (below xl) -->
+  <div id="mobile-menu" hidden class="px-4 pb-4 sm:px-6 lg:px-10 xl:hidden">
+    <div class="mx-auto max-w-[1280px] rounded-tile bg-tile p-4 shadow-lg shadow-black/5 sm:p-6">
+      <nav aria-label={t('nav.menu', lang)}>
+        <ul class="grid gap-1 sm:grid-cols-2">
+          {
+            navSections.map((section) => (
+              <li>
+                <a
+                  href={sectionHref(section.id)}
+                  data-nav-link={section.id}
+                  class="flex items-center justify-between rounded-[18px] px-4 py-3 text-lg font-semibold transition-colors hover:bg-bg aria-[current=location]:bg-ink aria-[current=location]:text-bg"
+                >
+                  {t(section.label, lang)}
+                  <Icon name="arrow-right" size={18} class="opacity-40" />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-4">
+        <LangSwitcher lang={lang} variant="list" />
+        <Button href={cvHref} download>
+          <Icon name="download" size={18} />
+          {t('cta.downloadCv', lang)}
+        </Button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  /* ---------- Compact menu ---------- */
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const panel = document.getElementById('mobile-menu');
+
+  function setMenu(open: boolean) {
+    if (!toggle || !panel) return;
+    panel.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.querySelector('[data-menu-icon="open"]')?.classList.toggle('hidden', open);
+    toggle.querySelector('[data-menu-icon="close"]')?.classList.toggle('hidden', !open);
+    const label = toggle.querySelector<HTMLElement>('[data-menu-label]');
+    if (label) label.textContent = (open ? label.dataset.close : label.dataset.open) ?? '';
+  }
+
+  toggle?.addEventListener('click', () => setMenu(Boolean(panel?.hidden)));
+  panel?.querySelectorAll('a[data-nav-link]').forEach((link) => link.addEventListener('click', () => setMenu(false)));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && panel && !panel.hidden) {
+      setMenu(false);
+      toggle?.focus();
+    }
+  });
+  window.matchMedia('(min-width: 80rem)').addEventListener('change', (event) => {
+    if (event.matches) setMenu(false);
+  });
+
+  /* ---------- Highlight the section on screen ---------- */
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[data-nav-link]'));
+  const ids = [...new Set(links.map((link) => link.dataset.navLink!))];
+
+  function updateActive() {
+    const sections = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    let active: string | null = null;
+    for (const section of sections) {
+      if (section.getBoundingClientRect().top <= window.innerHeight * 0.35) active = section.id;
+    }
+    // At the very bottom the last section may never reach the line: select it anyway.
+    const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+    if (atBottom && sections.length) active = sections[sections.length - 1].id;
+
+    for (const link of links) {
+      if (link.dataset.navLink === active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    }
+  }
+
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      updateActive();
+      ticking = false;
+    });
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  updateActive();
+</script>
