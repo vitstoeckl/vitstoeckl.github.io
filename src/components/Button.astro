@@ -4,6 +4,7 @@
  *  - primary: solid ink · secondary: tile with hairline border · ghost: text only
  *  - icon: round icon-only button — pass `label` (becomes aria-label)
  * With `href` it renders `<a>`, otherwise `<button type="button">`.
+ * `wrap` lets long labels break onto two lines (phones) instead of overflowing.
  */
 interface Props {
   variant?: 'primary' | 'secondary' | 'ghost' | 'icon';
@@ -11,11 +12,12 @@ interface Props {
   href?: string;
   label?: string;
   external?: boolean;
+  wrap?: boolean;
   class?: string;
   [key: string]: unknown;
 }
 
-const { variant = 'primary', size = 'md', href, label, external = false, class: className, ...rest } = Astro.props;
+const { variant = 'primary', size = 'md', href, label, external = false, wrap = false, class: className, ...rest } = Astro.props;
 
 const isIcon = variant === 'icon';
 const variants = {
@@ -26,10 +28,13 @@ const variants = {
 };
 const sizes = isIcon
   ? { sm: 'size-9', md: 'size-11', lg: 'size-15' }
-  : { sm: 'h-9 px-4 text-sm', md: 'h-11 px-5 text-[0.9375rem]', lg: 'h-13 px-6 text-base' };
+  : wrap
+    ? { sm: 'min-h-9 py-1.5 px-4 text-sm', md: 'min-h-11 py-2 px-5 text-[0.9375rem]', lg: 'min-h-13 py-2.5 px-6 text-base' }
+    : { sm: 'h-9 px-4 text-sm', md: 'h-11 px-5 text-[0.9375rem]', lg: 'h-13 px-6 text-base' };
 
 const classes = [
-  'inline-flex shrink-0 items-center justify-center gap-2 rounded-chip font-semibold whitespace-nowrap transition',
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-chip font-semibold transition',
+  wrap ? 'text-center leading-snug' : 'whitespace-nowrap',
   variants[variant],
   sizes[size],
   className,

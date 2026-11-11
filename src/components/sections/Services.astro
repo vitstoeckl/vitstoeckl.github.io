@@ -1,0 +1,105 @@
+---
+/**
+ * Services / "Work with me" (section id "services"): one tile per offer from `src/data/services.ts`
+ * with includes, proof links and the tile's CTA, plus a section-wide `cta.letsTalk` button to Contact.
+ * Proof: `projectSlug` → project page; otherwise `url` (internal paths go through `url()`).
+ */
+import Tile from '../Tile.astro';
+import Button from '../Button.astro';
+import Icon from '../Icon.astro';
+import SectionHeader from '../SectionHeader.astro';
+import { pick, t, type Lang } from '../../i18n/utils';
+import { services } from '../../data/services';
+import type { ServiceProof } from '../../data/types';
+import { url } from '../../lib/url';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const newTab = t('a11y.newTab', lang);
+const icons = { web: 'globe', automation: 'sparkles' } as const;
+
+function proofLink(proof: ServiceProof): { href: string; external: boolean } | null {
+  if (proof.projectSlug) return { href: url(`/${lang}/projects/${proof.projectSlug}/`), external: false };
+  if (proof.url) return { href: url(proof.url), external: /^https?:\/\//i.test(proof.url) };
+  return null;
+}
+---
+
+{
+  services.length > 0 && (
+    <section id="services" aria-labelledby="services-title" class="mt-16 sm:mt-20">
+      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <SectionHeader id="services-title" title={t('section.services', lang)} size="lg" />
+        <Button href="#contact" variant="secondary" wrap class="self-start sm:self-auto">
+          {t('cta.letsTalk', lang)}
+          <Icon name="arrow-right" size={18} />
+        </Button>
+      </div>
+
+      <ul class="grid gap-4 md:grid-cols-2">
+        {services.map((service, i) => (
+          <li data-reveal data-reveal-delay={String(i * 100)} class="flex">
+            <Tile size="lg" variant={i === 0 ? 'light' : 'soft'} class="flex w-full flex-col gap-7">
+              <div>
+                <span class="flex size-13 items-center justify-center rounded-2xl bg-accent text-accent-ink" aria-hidden="true">
+                  <Icon name={icons[service.icon]} size={26} />
+                </span>
+                <h3 class="mt-6 text-3xl">{pick(service.title, lang)}</h3>
+                <p class="mt-3 max-w-[48ch] leading-relaxed text-muted sm:text-[1.0625rem]">{pick(service.description, lang)}</p>
+              </div>
+
+              <div>
+                <h4 class="text-sm font-semibold tracking-normal text-muted">{t('services.includes', lang)}</h4>
+                <ul class="mt-3 space-y-2.5">
+                  {service.includes.map((item) => (
+                    <li class="flex gap-3 leading-snug">
+                      <Icon name="check" size={18} class="mt-0.5 text-accent" />
+                      <span>{pick(item, lang)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {service.proof && service.proof.length > 0 && (
+                <div>
+                  <h4 class="text-sm font-semibold tracking-normal text-muted">{t('services.proof', lang)}</h4>
+                  <ul class="mt-3 flex flex-wrap gap-2">
+                    {service.proof.map((proof) => {
+                      const link = proofLink(proof);
+                      const label = pick(proof.label, lang);
+                      return (
+                        <li class="max-w-full">
+                          {link ? (
+                            <a
+                              href={link.href}
+                              {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                              class="inline-flex max-w-full items-center gap-1.5 rounded-chip border border-line bg-tile px-3.5 py-2 text-sm leading-tight font-semibold transition-colors hover:bg-bg"
+                            >
+                              {label}
+                              <Icon name={link.external ? 'arrow-up-right' : 'arrow-right'} size={15} />
+                              {link.external && <span class="sr-only"> {newTab}</span>}
+                            </a>
+                          ) : (
+                            <span class="inline-flex rounded-chip border border-line px-3.5 py-2 text-sm font-semibold">{label}</span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+
+              <Button href="#contact" wrap class="mt-auto self-start">
+                {pick(service.cta, lang)}
+                <Icon name="arrow-right" size={18} />
+              </Button>
+            </Tile>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

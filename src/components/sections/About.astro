@@ -1,0 +1,99 @@
+---
+/**
+ * About + key numbers (section id "about").
+ * Row 1: About text (`profile.summary`, motto) + dark stat tile (counts come from the data).
+ * Row 2: Languages tile (level chips, certified level) + Skills tile (grouped chips, highlights in emerald).
+ */
+import Tile from '../Tile.astro';
+import Chip from '../Chip.astro';
+import SectionHeader from '../SectionHeader.astro';
+import { pick, t, type Lang } from '../../i18n/utils';
+import { profile } from '../../data/profile';
+import { projects } from '../../data/projects';
+import { certificates } from '../../data/certificates';
+import { spokenLanguages } from '../../data/languages';
+import { skillGroups } from '../../data/skills';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+const stats = [
+  { value: projects.length, label: t('stats.projects', lang) },
+  { value: certificates.length, label: t('stats.certificates', lang) },
+  { value: spokenLanguages.length, label: t('stats.languages', lang) },
+].filter((s) => s.value > 0);
+---
+
+<section id="about" aria-labelledby="about-title" class="mt-4 grid gap-4 lg:grid-cols-3">
+  <Tile size="lg" class="lg:col-span-2" data-reveal>
+    <SectionHeader id="about-title" title={t('section.about', lang)} />
+    <div class="mt-5 space-y-4 text-base leading-relaxed text-muted sm:text-[1.0625rem]">
+      {profile.summary.map((paragraph) => <p class="max-w-[68ch]">{pick(paragraph, lang)}</p>)}
+    </div>
+    {
+      profile.motto && (
+        <p class="mt-6 border-l-2 border-accent pl-4 font-semibold tracking-tight text-ink">
+          “{pick(profile.motto, lang)}”
+        </p>
+      )
+    }
+  </Tile>
+
+  <Tile variant="dark" size="lg" class="flex flex-col justify-between gap-8" data-reveal data-reveal-delay="100">
+    <h2 class="text-xl font-semibold tracking-tight">{t('section.keyNumbers', lang)}</h2>
+    <dl class="grid grid-cols-3 gap-4 lg:grid-cols-1 lg:gap-6">
+      {
+        stats.map((s) => (
+          <div class="flex flex-col gap-1 lg:flex-row lg:items-baseline lg:justify-between lg:border-t lg:border-white/10 lg:pt-5">
+            <dt class="order-2 text-sm text-tile-dark-muted lg:order-1 lg:text-base">{s.label}</dt>
+            <dd class="order-1 text-5xl leading-none font-extrabold tracking-[-0.04em] lg:order-2 lg:text-6xl">
+              {s.value}
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </Tile>
+
+  <Tile class="lg:col-span-1" data-reveal>
+    <SectionHeader id="languages-title" title={t('section.languages', lang)} />
+    <ul class="mt-5 divide-y divide-line" aria-labelledby="languages-title">
+      {
+        spokenLanguages.map((l) => (
+          <li class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+            <div class="min-w-0">
+              <p class="font-semibold">{pick(l.name, lang)}</p>
+              {l.certified && <p class="text-sm text-muted">{t('level.certified', lang, { level: l.certified })}</p>}
+            </div>
+            <Chip variant={l.level === 'native' ? 'accent' : 'neutral'}>
+              {l.level === 'native' ? t('level.native', lang) : l.level}
+            </Chip>
+          </li>
+        ))
+      }
+    </ul>
+  </Tile>
+
+  <Tile class="lg:col-span-2" data-reveal data-reveal-delay="100">
+    <SectionHeader id="skills-title" title={t('section.skills', lang)} />
+    <div class="mt-5 grid gap-6 sm:grid-cols-2">
+      {
+        skillGroups.map((group) => (
+          <div class="min-w-0">
+            <h3 class="text-sm font-semibold tracking-normal text-muted">{pick(group.title, lang)}</h3>
+            <ul class="mt-3 flex flex-wrap gap-2">
+              {group.skills.map((skill) => (
+                <Chip as="li" variant={skill.highlight ? 'accent' : 'neutral'} class="max-w-full whitespace-normal!">
+                  {pick(skill.name, lang)}
+                </Chip>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </Tile>
+</section>

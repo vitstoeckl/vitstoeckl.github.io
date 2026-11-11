@@ -1,0 +1,79 @@
+---
+/**
+ * Experience (section id "experience"): one timeline tile per role, newest first.
+ * Left: dates + location (with a dot on the timeline line); right: role, company, bullets, tags.
+ */
+import Tile from '../Tile.astro';
+import Chip from '../Chip.astro';
+import Icon from '../Icon.astro';
+import SectionHeader from '../SectionHeader.astro';
+import { formatDateRange, pick, t, type Lang } from '../../i18n/utils';
+import { experience } from '../../data/experience';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const newTab = t('a11y.newTab', lang);
+// Newest first, ongoing roles on top.
+const items = [...experience].sort((a, b) => (b.end ?? '9999').localeCompare(a.end ?? '9999') || b.start.localeCompare(a.start));
+---
+
+{
+  items.length > 0 && (
+    <section id="experience" aria-labelledby="experience-title" class="mt-16 sm:mt-20">
+      <SectionHeader id="experience-title" title={t('section.experience', lang)} size="lg" class="mb-6" />
+      <ol class="relative grid gap-4">
+        {items.map((job) => (
+          <li data-reveal>
+            <Tile class="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
+              <div class="flex flex-col gap-1.5 lg:border-r lg:border-line lg:pr-8">
+                <p class="flex items-center gap-2.5 text-sm font-semibold">
+                  <span class:list={['size-2.5 shrink-0 rounded-full', job.end ? 'bg-muted' : 'bg-accent']} aria-hidden="true" />
+                  {formatDateRange(job.start, job.end, lang)}
+                </p>
+                <p class="flex items-center gap-1.5 text-sm text-muted">
+                  <Icon name="map-pin" size={15} />
+                  {pick(job.location, lang)}
+                </p>
+                {job.employmentType && <p class="text-sm text-muted">{pick(job.employmentType, lang)}</p>}
+              </div>
+
+              <div class="min-w-0">
+                <h3 class="text-2xl">{pick(job.role, lang)}</h3>
+                <p class="mt-1 font-semibold text-accent">
+                  {job.companyUrl ? (
+                    <a href={job.companyUrl} target="_blank" rel="noopener noreferrer" class="hover:underline">
+                      {job.company}
+                      <span class="sr-only"> {newTab}</span>
+                    </a>
+                  ) : (
+                    job.company
+                  )}
+                </p>
+                <ul class="mt-4 space-y-2.5">
+                  {job.bullets.map((bullet) => (
+                    <li class="flex gap-3 leading-relaxed text-muted">
+                      <span class="mt-[0.6em] size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                      <span>{pick(bullet, lang)}</span>
+                    </li>
+                  ))}
+                </ul>
+                {job.tags && job.tags.length > 0 && (
+                  <ul class="mt-5 flex flex-wrap gap-2">
+                    {job.tags.map((tag) => (
+                      <Chip as="li" variant="outline">
+                        {tag}
+                      </Chip>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </Tile>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}

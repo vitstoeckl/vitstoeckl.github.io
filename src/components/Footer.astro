@@ -1,0 +1,51 @@
+---
+/**
+ * Footer: © year + name, language links (same page in each language; LangSwitcher's script
+ * keeps the current section), "Last updated" (the build date) and a back-to-top link.
+ */
+import { formatDate, languages, langs, t, type Lang } from '../i18n/utils';
+import { profile } from '../data/profile';
+import { localizedPath } from '../lib/url';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const now = new Date();
+---
+
+<footer class="mx-auto max-w-[1360px] px-4 pb-10 sm:px-6 lg:px-10">
+  <div class="flex flex-col gap-5 border-t border-line pt-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
+    <div class="flex flex-col gap-1">
+      <p class="font-semibold text-ink">{t('footer.copyright', lang, { year: now.getFullYear(), name: profile.name })}</p>
+      <p>{t('footer.lastUpdated', lang, { date: formatDate(now, lang) })}</p>
+    </div>
+
+    <nav aria-label={t('lang.label', lang)}>
+      <ul class="flex flex-wrap gap-x-1 gap-y-2">
+        {
+          langs.map((code) => (
+            <li>
+              <a
+                href={localizedPath(Astro.url.pathname, code)}
+                hreflang={code}
+                lang={code}
+                title={languages[code].label}
+                data-lang-link={code}
+                aria-current={code === lang ? 'page' : undefined}
+                class="rounded-chip px-3 py-1.5 font-semibold transition-colors hover:bg-tile hover:text-ink aria-[current=page]:bg-tile aria-[current=page]:text-ink"
+              >
+                {languages[code].short}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <a href="#main" class="font-semibold text-ink hover:underline">
+      {t('cta.backToTop', lang)} <span aria-hidden="true">↑</span>
+    </a>
+  </div>
+</footer>

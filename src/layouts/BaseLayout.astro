@@ -47,10 +47,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         try { stored = localStorage.getItem('theme'); } catch (e) {}
         var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
         document.documentElement.classList.toggle('dark', dark);
+        // Lets CSS hide [data-reveal] blocks until they scroll in; without JS they stay visible.
+        document.documentElement.classList.add('js');
       })();
     </script>
   </head>
   <body class="bg-bg text-ink font-sans">
     <slot />
+    <script>
+      import '../lib/reveal';
+    </script>
   </body>
 </html>

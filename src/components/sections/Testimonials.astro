@@ -1,0 +1,55 @@
+---
+/** Testimonials (section id "testimonials"): quote tiles. Hidden when the data array is empty. */
+import Tile from '../Tile.astro';
+import Icon from '../Icon.astro';
+import SectionHeader from '../SectionHeader.astro';
+import { pick, t, type Lang } from '../../i18n/utils';
+import { testimonials } from '../../data/testimonials';
+import { url } from '../../lib/url';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const newTab = t('a11y.newTab', lang);
+---
+
+{
+  testimonials.length > 0 && (
+    <section id="testimonials" aria-labelledby="testimonials-title" class="mt-16 sm:mt-20">
+      <SectionHeader id="testimonials-title" title={t('section.testimonials', lang)} size="lg" class="mb-6" />
+      <ul class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {testimonials.map((item, i) => (
+          <li data-reveal data-reveal-delay={String((i % 3) * 100)} class="flex">
+            <Tile as="figure" class="flex w-full flex-col gap-6">
+              <Icon name="quote" size={32} class="text-accent" />
+              <blockquote class="text-lg leading-relaxed font-medium tracking-tight">{pick(item.quote, lang)}</blockquote>
+              <figcaption class="mt-auto flex items-center gap-3 border-t border-line pt-5">
+                {item.photo && (
+                  <img src={url(item.photo)} alt="" width="44" height="44" loading="lazy" class="size-11 rounded-full object-cover" />
+                )}
+                <div class="min-w-0 text-sm">
+                  <p class="font-semibold">
+                    {item.linkedin ? (
+                      <a href={item.linkedin} target="_blank" rel="noopener noreferrer" class="hover:underline">
+                        {item.name}
+                        <span class="sr-only"> — LinkedIn {newTab}</span>
+                      </a>
+                    ) : (
+                      item.name
+                    )}
+                  </p>
+                  <p class="text-muted">
+                    {pick(item.role, lang)}
+                    {item.company && <> · {item.company}</>}
+                  </p>
+                </div>
+              </figcaption>
+            </Tile>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

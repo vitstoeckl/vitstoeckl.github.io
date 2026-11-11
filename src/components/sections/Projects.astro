@@ -1,0 +1,168 @@
+---
+/**
+ * Projects (section id "projects"): the first featured project as a large tile + a grid of the rest.
+ * Filter chips are built from the categories that actually have projects and filter without a reload.
+ * Each card links to `/{lang}/projects/{slug}/` (pages come in Step 5).
+ */
+import Tile from '../Tile.astro';
+import Chip from '../Chip.astro';
+import Badge from '../Badge.astro';
+import Icon from '../Icon.astro';
+import SectionHeader from '../SectionHeader.astro';
+import { pick, t, type Lang } from '../../i18n/utils';
+import { projects } from '../../data/projects';
+import type { ProjectCategory } from '../../data/types';
+import { url } from '../../lib/url';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const newTab = t('a11y.newTab', lang);
+
+const categoryOrder: ProjectCategory[] = ['finance', 'data', 'web', 'automation'];
+const categories = categoryOrder.filter((c) => projects.some((p) => p.category === c));
+
+const featured = projects.find((p) => p.featured);
+const ordered = featured ? [featured, ...projects.filter((p) => p !== featured)] : projects;
+const projectHref = (slug: string) => url(`/${lang}/projects/${slug}/`);
+---
+
+{
+  projects.length > 0 && (
+    <section id="projects" aria-labelledby="projects-title" class="mt-16 sm:mt-20">
+      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <SectionHeader id="projects-title" title={t('section.projects', lang)} size="lg" />
+        {categories.length > 1 && (
+          <div class="flex flex-wrap gap-2" role="group" aria-label={t('section.projects', lang)} data-project-filters>
+            <Chip as="button" active data-filter="all" aria-pressed="true">
+              {t('filter.all', lang)}
+            </Chip>
+            {categories.map((c) => (
+              <Chip as="button" variant="outline" data-filter={c} aria-pressed="false">
+                {t(`category.${c}`, lang)}
+              </Chip>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ul class="grid gap-4 md:grid-cols-2 lg:grid-cols-3" data-project-grid>
+        {ordered.map((p, i) => {
+          const isFeatured = p === featured;
+          const title = pick(p.title, lang);
+          return (
+            <li
+              data-category={p.category}
+              data-reveal
+              data-reveal-delay={String((i % 3) * 100)}
+              class:list={['flex', isFeatured && 'md:col-span-2']}
+            >
+              <Tile
+                as="article"
+                size={isFeatured ? 'lg' : 'md'}
+                class:list={[
+                  'group flex w-full flex-col gap-6 transition-shadow hover:shadow-lg hover:shadow-black/5',
+                  isFeatured && 'min-h-[360px]',
+                ]}
+              >
+                <div class="flex flex-wrap items-center gap-2">
+                  {isFeatured && (
+                    <Badge variant="accent" dot={false}>
+                      {t('project.featured', lang)}
+                    </Badge>
+                  )}
+                  <Chip variant="neutral">{t(`category.${p.category}`, lang)}</Chip>
+                  {p.year && <span class="text-sm text-muted">{p.year}</span>}
+                </div>
+
+                <div class:list={['flex flex-col gap-6', isFeatured && 'sm:flex-row sm:items-start sm:justify-between']}>
+                  <div class="min-w-0">
+                    <h3 class:list={[isFeatured ? 'text-4xl sm:text-5xl' : 'text-2xl']}>
+                      <a href={projectHref(p.slug)} class="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none">
+                        {title}
+                      </a>
+                    </h3>
+                    <p class:list={['mt-3 leading-relaxed text-muted', isFeatured ? 'max-w-[52ch] sm:text-[1.0625rem]' : '']}>
+                      {pick(p.summary, lang)}
+                    </p>
+                    {p.status && (
+                      <p class="mt-3 flex items-center gap-2 text-sm font-semibold text-accent">
+                        <span class="size-2 rounded-full bg-accent" aria-hidden="true" />
+                        {pick(p.status, lang)}
+                      </p>
+                    )}
+                  </div>
+                  {isFeatured && p.kpi && (
+                    <div class="shrink-0 rounded-[20px] bg-accent-soft px-6 py-5 sm:text-right">
+                      <p class="text-6xl leading-none font-extrabold tracking-[-0.05em] text-accent">{p.kpi.value}</p>
+                      <p class="mt-1 text-sm font-semibold text-accent">{pick(p.kpi.label, lang)}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div class="mt-auto flex flex-col gap-5">
+                  {p.tags.length > 0 && (
+                    <ul class="flex flex-wrap gap-2">
+                      {(isFeatured ? p.tags : p.tags.slice(0, 4)).map((tag) => (
+                        <Chip as="li" variant="outline" class="max-w-full whitespace-normal!">
+                          {tag}
+                        </Chip>
+                      ))}
+                    </ul>
+                  )}
+                  <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+                    <span class="inline-flex items-center gap-2 text-sm font-semibold" aria-hidden="true">
+                      {t('cta.viewProject', lang)}
+                      <Icon name="arrow-right" size={16} class="transition-transform group-hover:translate-x-1" />
+                    </span>
+                    {p.links?.map((link) => (
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="relative z-10 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
+                      >
+                        {t('cta.visit', lang, { site: link.label ?? new URL(link.url).hostname })}
+                        <Icon name="arrow-up-right" size={15} />
+                        <span class="sr-only"> {newTab}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </Tile>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-project-filters]').forEach((group) => {
+    const section = group.closest('section');
+    const buttons = Array.from(group.querySelectorAll<HTMLButtonElement>('button[data-filter]'));
+    const cards = Array.from(section?.querySelectorAll<HTMLElement>('[data-project-grid] > [data-category]') ?? []);
+    const activeClasses = ['bg-ink', 'text-bg'];
+    const idleClasses = ['border', 'border-line', 'text-ink', 'hover:bg-line'];
+
+    function apply(filter: string) {
+      buttons.forEach((button) => {
+        const on = button.dataset.filter === filter;
+        button.setAttribute('aria-pressed', String(on));
+        button.classList.remove(...(on ? idleClasses : activeClasses));
+        button.classList.add(...(on ? activeClasses : idleClasses));
+      });
+      cards.forEach((card) => {
+        const show = filter === 'all' || card.dataset.category === filter;
+        card.hidden = !show;
+        // A card that was filtered out before scrolling into view must not stay invisible.
+        if (show) card.classList.add('is-revealed');
+      });
+    }
+
+    buttons.forEach((button) => button.addEventListener('click', () => apply(button.dataset.filter ?? 'all')));
+  });
+</script>

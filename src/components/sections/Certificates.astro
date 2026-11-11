@@ -1,0 +1,77 @@
+---
+/**
+ * Certificates (section id "certificates"): grid of tiles with an initial, name, issuer, date
+ * and "Verify ↗" / "View" links. Every optional field is hidden when empty.
+ */
+import Tile from '../Tile.astro';
+import Icon from '../Icon.astro';
+import SectionHeader from '../SectionHeader.astro';
+import { formatYearMonth, pick, t, type Lang } from '../../i18n/utils';
+import { certificates } from '../../data/certificates';
+import { url } from '../../lib/url';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const newTab = t('a11y.newTab', lang);
+---
+
+{
+  certificates.length > 0 && (
+    <section id="certificates" aria-labelledby="certificates-title" class="mt-16 sm:mt-20">
+      <SectionHeader id="certificates-title" title={t('section.certificates', lang)} size="lg" class="mb-6" />
+      <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {certificates.map((c, i) => {
+          const name = pick(c.name, lang);
+          const initial = (c.issuer ?? name).trim().charAt(0).toUpperCase();
+          return (
+            <li data-reveal data-reveal-delay={String((i % 3) * 100)} class="flex">
+              <Tile size="sm" class="flex w-full flex-col gap-5">
+                <div class="flex items-start gap-4">
+                  <span
+                    class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-lg font-extrabold text-accent"
+                    aria-hidden="true"
+                  >
+                    {initial}
+                  </span>
+                  <div class="min-w-0">
+                    <h3 class="text-lg leading-snug">{name}</h3>
+                    {c.issuer && <p class="mt-1 text-sm text-muted">{t('certificates.issuedBy', lang, { issuer: c.issuer })}</p>}
+                    {c.date && (
+                      <p class="mt-0.5 text-sm text-muted">
+                        <time datetime={c.date}>{formatYearMonth(c.date, lang)}</time>
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {(c.verifyUrl || c.file) && (
+                  <div class="mt-auto flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-4 text-sm font-semibold">
+                    {c.verifyUrl && (
+                      <a href={c.verifyUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-accent hover:underline">
+                        {t('cta.verify', lang)}
+                        <Icon name="arrow-up-right" size={15} />
+                        <span class="sr-only">
+                          : {name} {newTab}
+                        </span>
+                      </a>
+                    )}
+                    {c.file && (
+                      <a href={url(c.file)} target="_blank" rel="noopener" class="inline-flex items-center gap-1 hover:underline">
+                        {t('cta.view', lang)}
+                        <span class="sr-only">
+                          : {name} {newTab}
+                        </span>
+                      </a>
+                    )}
+                  </div>
+                )}
+              </Tile>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )
+}

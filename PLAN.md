@@ -110,7 +110,7 @@ CV/
 
 ---
 
-## Step 4 — All remaining sections  ☐
+## Step 4 — All remaining sections  ☑
 
 **Goal:** the full one-page CV.
 

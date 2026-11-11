@@ -1,0 +1,57 @@
+---
+/** Achievements & extracurriculars (section id "achievements"). Hidden when the data array is empty. */
+import Tile from '../Tile.astro';
+import Chip from '../Chip.astro';
+import Icon from '../Icon.astro';
+import SectionHeader from '../SectionHeader.astro';
+import { formatYearMonth, pick, t, type Lang } from '../../i18n/utils';
+import { achievements } from '../../data/achievements';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const newTab = t('a11y.newTab', lang);
+---
+
+{
+  achievements.length > 0 && (
+    <section id="achievements" aria-labelledby="achievements-title" class="mt-16 sm:mt-20">
+      <SectionHeader id="achievements-title" title={t('section.achievements', lang)} size="lg" class="mb-6" />
+      <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {achievements.map((a, i) => (
+          <li data-reveal data-reveal-delay={String((i % 3) * 100)} class="flex">
+            <Tile size="sm" class="flex w-full flex-col gap-4">
+              <div class="flex flex-wrap items-center gap-2">
+                <Chip variant="accent">{t(`achievement.${a.kind}`, lang)}</Chip>
+                {a.date && (
+                  <time datetime={a.date} class="text-sm text-muted">
+                    {formatYearMonth(a.date, lang)}
+                  </time>
+                )}
+              </div>
+              <div>
+                <h3 class="text-lg leading-snug">{pick(a.title, lang)}</h3>
+                {a.organization && <p class="mt-1 text-sm font-semibold text-muted">{a.organization}</p>}
+              </div>
+              {a.description && <p class="text-sm leading-relaxed text-muted">{pick(a.description, lang)}</p>}
+              {a.url && (
+                <a
+                  href={a.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
+                >
+                  {new URL(a.url).hostname.replace(/^www\./, '')}
+                  <Icon name="arrow-up-right" size={15} />
+                  <span class="sr-only"> {newTab}</span>
+                </a>
+              )}
+            </Tile>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

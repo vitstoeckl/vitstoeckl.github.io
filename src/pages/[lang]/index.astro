@@ -1,7 +1,17 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
 import Hero from '../../components/hero/Hero.astro';
+import About from '../../components/sections/About.astro';
+import Experience from '../../components/sections/Experience.astro';
+import Education from '../../components/sections/Education.astro';
+import Projects from '../../components/sections/Projects.astro';
+import Services from '../../components/sections/Services.astro';
+import Certificates from '../../components/sections/Certificates.astro';
+import Achievements from '../../components/sections/Achievements.astro';
+import Testimonials from '../../components/sections/Testimonials.astro';
+import Contact from '../../components/sections/Contact.astro';
 import { langs, t, type Lang } from '../../i18n/utils';
 import { profile } from '../../data/profile';
 
@@ -20,6 +30,16 @@ const lang = Astro.params.lang as Lang;
   <Nav lang={lang} />
   <main id="main" tabindex="-1" class="mx-auto max-w-[1360px] px-4 pt-2 pb-16 outline-none sm:px-6 lg:px-10 xl:pt-4">
     <Hero lang={lang} />
-    <!-- Step 4 adds the remaining sections here (ids from src/lib/sections.ts). -->
+    <!-- Section ids match the nav anchors in src/lib/sections.ts. -->
+    <About lang={lang} />
+    <Experience lang={lang} />
+    <Education lang={lang} />
+    <Projects lang={lang} />
+    <Services lang={lang} />
+    <Certificates lang={lang} />
+    <Achievements lang={lang} />
+    <Testimonials lang={lang} />
+    <Contact lang={lang} />
   </main>
+  <Footer lang={lang} />
 </BaseLayout>
