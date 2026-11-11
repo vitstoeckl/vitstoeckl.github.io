@@ -141,7 +141,9 @@ CV/
 
 ---
 
-## Step 6 — SEO, PDF generation, deployment  ☐
+## Step 6 — SEO, PDF generation, deployment  ☑
+
+Live at **https://vitstoeckl.github.io/** (repo `vitstoeckl/vitstoeckl.github.io`, public). Every push to `main` redeploys.
 
 **Goal:** the site is shareable, findable, and published automatically.
 
