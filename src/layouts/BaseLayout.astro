@@ -1,6 +1,14 @@
 ---
+/**
+ * Page shell: meta tags, SEO (canonical, hreflang alternates, Open Graph / LinkedIn card),
+ * favicon and the no-flash theme script.
+ * Pages under `/{lang}/…` get hreflang links to the same page in every language
+ * and the preview image `/og/{lang}.png` (made by scripts/generate-pdf.mjs after the build).
+ */
 import '../styles/global.css';
-import { url } from '../lib/url';
+import { url, localizedPath } from '../lib/url';
+import { defaultLang, isLang, languages, langs } from '../i18n/utils';
+import { profile } from '../data/profile';
 
 interface Props {
   title: string;
@@ -9,6 +17,8 @@ interface Props {
   noindex?: boolean;
   /** Always light, ignoring the saved theme (the print CV page). */
   forceLight?: boolean;
+  /** Open Graph type: `profile` for the main CV page, `article` for case studies. */
+  ogType?: 'website' | 'profile' | 'article';
 }
 
 const {
@@ -17,9 +27,23 @@ const {
   lang = 'en',
   noindex = false,
   forceLight = false,
+  ogType = 'website',
 } = Astro.props;
 
-const canonical = new URL(Astro.url.pathname, Astro.site);
+const site = Astro.site;
+const canonical = new URL(Astro.url.pathname, site);
+
+// Same page in every language (only for pages that live under a language prefix).
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const firstSegment = Astro.url.pathname.slice(base.length).split('/').filter(Boolean)[0];
+const localized = isLang(firstSegment) && isLang(lang);
+const alternates = localized && !noindex
+  ? langs.map((code) => ({ code, href: new URL(localizedPath(Astro.url.pathname, code), site).href }))
+  : [];
+const xDefault = alternates.find((a) => a.code === defaultLang)?.href;
+
+const ogLang = isLang(lang) ? lang : defaultLang;
+const ogImage = new URL(url(`og/${ogLang}.png`), site).href;
 ---
 
 <!doctype html>
@@ -31,16 +55,31 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {alternates.map((a) => <link rel="alternate" hreflang={a.code} href={a.href} />)}
+    {xDefault && <link rel="alternate" hreflang="x-default" href={xDefault} />}
+    {!noindex && <link rel="sitemap" href={url('sitemap-index.xml')} />}
     <meta name="generator" content={Astro.generator} />
 
     <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
     <meta name="theme-color" content="#EFEEEA" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0B0B0C" media="(prefers-color-scheme: dark)" />
 
-    <meta property="og:type" content="website" />
+    <!-- Open Graph (LinkedIn, Facebook, WhatsApp…) + X/Twitter -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={profile.name} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={languages[ogLang].ogLocale} />
+    {langs.filter((code) => code !== ogLang).map((code) => <meta property="og:locale:alternate" content={languages[code].ogLocale} />)}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={profile.name} />
+    {ogType === 'profile' && <meta property="profile:first_name" content={profile.firstName} />}
+    {ogType === 'profile' && <meta property="profile:last_name" content={profile.lastName} />}
+    <meta name="twitter:card" content="summary_large_image" />
     <slot name="head" />
 
     <!-- Theme: saved choice, else system preference. Runs before paint → no flash. -->

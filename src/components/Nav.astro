@@ -19,7 +19,10 @@ interface Props {
 
 const { lang } = Astro.props;
 const home = url(`/${lang}/`);
-const cvHref = url(`cv/${cvFileName(lang)}`);
+// The PDF is made after `astro build` (scripts/generate-pdf.mjs); in `astro dev` it does not exist,
+// so the button opens the printable CV page instead.
+const cvHref = import.meta.env.DEV ? url(`/${lang}/cv/`) : url(`cv/${cvFileName(lang)}`);
+const cvDownload = import.meta.env.DEV ? undefined : cvFileName(lang);
 // Section links are plain `#id` on the home page and `/{lang}/#id` everywhere else.
 const onHome = Astro.url.pathname.replace(/\/+$/, '') === home.replace(/\/+$/, '');
 const sectionHref = (id: string) => (onHome ? `#${id}` : `${home}#${id}`);
@@ -58,7 +61,7 @@ const sectionHref = (id: string) => (onHome ? `#${id}` : `${home}#${id}`);
     <div class="flex items-center justify-end gap-2.5">
       <LangSwitcher lang={lang} class="hidden xl:block" />
       <ThemeToggle lang={lang} />
-      <Button href={cvHref} download class="max-xl:hidden">{t('cta.downloadCv', lang)}</Button>
+      <Button href={cvHref} download={cvDownload} class="max-xl:hidden">{t('cta.downloadCv', lang)}</Button>
 
       <button
         type="button"
@@ -97,7 +100,7 @@ const sectionHref = (id: string) => (onHome ? `#${id}` : `${home}#${id}`);
       </nav>
       <div class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-4">
         <LangSwitcher lang={lang} variant="list" />
-        <Button href={cvHref} download>
+        <Button href={cvHref} download={cvDownload}>
           <Icon name="download" size={18} />
           {t('cta.downloadCv', lang)}
         </Button>

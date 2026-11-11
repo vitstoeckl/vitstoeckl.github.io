@@ -1,0 +1,153 @@
+---
+/**
+ * Social preview card (1200×630) in the Bento style, one per language.
+ * Not a real page: `scripts/generate-pdf.mjs` screenshots it into `dist/og/{lang}.png`,
+ * which BaseLayout uses as `og:image`. Excluded from the sitemap, noindex.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { langs, pick, type Lang } from '../../i18n/utils';
+import { profile } from '../../data/profile';
+import { url } from '../../lib/url';
+
+export function getStaticPaths() {
+  return langs.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const address = new URL(url(`/${lang}/`), Astro.site).href.replace(/^https?:\/\//, '').replace(/\/$/, '');
+---
+
+<BaseLayout title={profile.name} lang={lang} noindex forceLight>
+  <div class="og">
+    <div class="tile main">
+      <span class="badge"><span class="dot"></span>{pick(profile.status.label, lang)}</span>
+      <div>
+        <h1>{profile.name}</h1>
+        <p class="title">{pick(profile.title, lang)}</p>
+        <p class="headline">{pick(profile.headline, lang)}</p>
+      </div>
+    </div>
+    <div class="side">
+      <div class="tile dark">
+        {profile.photo ? <img src={url(profile.photo)} alt="" /> : <span class="initials">{profile.initials}</span>}
+        <span class="stats">{pick(profile.location, lang)}</span>
+      </div>
+      <div class="tile soft">{address}</div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .og {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    box-sizing: border-box;
+    width: 1200px;
+    height: 630px;
+    padding: 36px;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    overflow: hidden;
+  }
+
+  .tile {
+    border-radius: 28px;
+    padding: 44px;
+  }
+
+  .main {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--color-tile);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-accent);
+  }
+
+  h1 {
+    font-size: 104px;
+    line-height: 0.95;
+    letter-spacing: -0.05em;
+  }
+
+  .title {
+    margin-top: 22px;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-accent);
+  }
+
+  .headline {
+    margin-top: 10px;
+    font-size: 30px;
+    font-weight: 500;
+    color: var(--color-muted);
+  }
+
+  .side {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 20px;
+  }
+
+  .dark {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    background: var(--color-tile-dark);
+    color: var(--color-tile-dark-ink);
+  }
+
+  .dark img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .initials {
+    font-size: 150px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+
+  .stats {
+    position: relative;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--color-tile-dark-muted);
+  }
+
+  .soft {
+    padding: 28px 32px;
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+</style>

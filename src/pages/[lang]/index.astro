@@ -12,21 +12,48 @@ import Certificates from '../../components/sections/Certificates.astro';
 import Achievements from '../../components/sections/Achievements.astro';
 import Testimonials from '../../components/sections/Testimonials.astro';
 import Contact from '../../components/sections/Contact.astro';
-import { langs, t, type Lang } from '../../i18n/utils';
+import { langs, pick, t, type Lang } from '../../i18n/utils';
 import { profile } from '../../data/profile';
+import { education } from '../../data/education';
+import { experience } from '../../data/experience';
+import { spokenLanguages } from '../../data/languages';
+import { url } from '../../lib/url';
 
 export function getStaticPaths() {
   return langs.map((lang) => ({ params: { lang } }));
 }
 
 const lang = Astro.params.lang as Lang;
+
+// Structured data for search engines (schema.org Person).
+const current = experience.find((job) => !job.end);
+const personLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  alternateName: 'Vít Stoeckl',
+  givenName: profile.firstName,
+  familyName: profile.lastName,
+  jobTitle: pick(profile.title, lang),
+  description: pick(profile.status.lookingFor, lang),
+  url: new URL(url(`/${lang}/`), Astro.site).href,
+  email: `mailto:${profile.email}`,
+  ...(profile.photo && { image: new URL(url(profile.photo), Astro.site).href }),
+  address: { '@type': 'PostalAddress', addressLocality: pick(profile.location, lang) },
+  sameAs: [profile.socials.linkedin, profile.socials.github].filter(Boolean),
+  ...(current && { worksFor: { '@type': 'Organization', name: current.company, ...(current.companyUrl && { url: current.companyUrl }) } }),
+  alumniOf: education.map((e) => ({ '@type': 'EducationalOrganization', name: e.school, ...(e.schoolUrl && { url: e.schoolUrl }) })),
+  knowsLanguage: spokenLanguages.map((l) => l.code),
+};
 ---
 
 <BaseLayout
   title={t('meta.title', lang, { name: profile.name })}
   description={t('meta.description', lang, { name: profile.name })}
   lang={lang}
+  ogType="profile"
 >
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(personLd)} />
   <Nav lang={lang} />
   <main id="main" tabindex="-1" class="mx-auto max-w-[1360px] px-4 pt-2 pb-16 outline-none sm:px-6 lg:px-10 xl:pt-4">
     <Hero lang={lang} />
